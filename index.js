@@ -259,7 +259,7 @@ app.post("/edit", (req, res) => {
 });
 
 // delete
-app.get("/delete/:id", (re, res) => {
+app.get("/delete/:id", (req, res) => {
   if (req.params.id == null || undefined) {
     res.status(400).json({
       message: "invalid value",
