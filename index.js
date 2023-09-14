@@ -16,26 +16,31 @@ app.get("/checkid/:id", (req, res) => {
       message: "id invalidate",
     });
   }
-  const sql = `SELECT * FROM user WHERE user_id = '${req.params.id}'`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
-        if (rows.length == 0) {
-          res.status(200).json({
-            message: "Avaliable Id",
-          });
-        } else {
-          res.status(400).json({
-            message: "Already Exist",
-          });
-        }
-      }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
+
+  res.status(200).json({
+    message: req.params.id,
   });
+
+  // const sql = `SELECT * FROM user WHERE user_id = '${req.params.id}'`;
+  // connection.query(sql, (error, rows) => {
+  //   try {
+  //     if (res.statusCode === 200) {
+  //       if (rows.length == 0) {
+  //         res.status(200).json({
+  //           message: "Avaliable Id",
+  //         });
+  //       } else {
+  //         res.status(400).json({
+  //           message: "Already Exist",
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       message: error,
+  //     });
+  //   }
+  // });
 });
 
 // nickname check
