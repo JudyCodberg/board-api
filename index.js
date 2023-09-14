@@ -10,67 +10,75 @@ app.get("/", (req, res) => {
 });
 
 // id check
+// id params 없을 때
+app.get("/checkId/", (req, res) => {
+  res.sendStatus(404);
+});
 app.get("/checkid/:id", (req, res) => {
-  if (req.params.id == null || undefined) {
+  let paramsId = req.params.id.trim();
+  if (paramsId.length == 0 || paramsId == null || undefined) {
     res.status(400).json({
       message: "id invalidate",
+      statusCode: 400,
     });
-  }
-
-  // res.status(200).json({
-  //   message: req.params.id,
-  // });
-
-  const sql = `SELECT * FROM user WHERE user_id = '${req.params.id}'`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
+  } else {
+    const sql = `SELECT * FROM user WHERE user_id = '${paramsId}'`;
+    connection.query(sql, (error, rows) => {
+      try {
         if (rows.length == 0) {
-          res.status(200).json({
+          res.json({
             message: "Avaliable Id",
+            statusCode: 200,
           });
         } else {
-          res.status(400).json({
+          res.status(404).json({
             message: "Already Exist",
+            statusCode: 404,
           });
         }
+      } catch (error) {
+        res.status(500).json({
+          message: error,
+        });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: error,
-      });
-    }
-  });
+    });
+  }
 });
 
 // nickname check
+app.get("/checknick/", (req, res) => {
+  res.sendStatus(404);
+});
 app.get("/checknick/:name", (req, res) => {
-  if (req.params.name == null || undefined) {
+  let paramsName = req.params.name.trim();
+  if (paramsName.length == 0 || paramsName == null || undefined) {
     res.status(400).json({
       message: "nickname invalidate",
+      statusCode: 400,
     });
-  }
-  const checkName = req.params.name;
-  const sql = `SELECT * FROM user WHERE nickname= '${checkName}'`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
+  } else {
+    const sql = `SELECT * FROM user WHERE nickname= '${paramsName}'`;
+    connection.query(sql, (error, rows) => {
+      try {
         if (rows.length == 0) {
-          res.status(200).json({
+          res.json({
             message: "Avaliable nickname",
+            statusCode: 200,
           });
         } else {
-          res.status(400).json({
+          res.status(404).json({
             message: "Already Exist",
+            statusCode: 404,
           });
         }
+      } catch (error) {
+        res.json({
+          message: "Unexpected Error",
+          statusCode: 500,
+        });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
+    });
+  }
 });
 
 // login
@@ -79,86 +87,102 @@ app.post("/login", (req, res) => {
   if (id == undefined || password == undefined) {
     res.status(400).json({
       message: "invalid value",
+      statusCode: 400,
     });
-  }
-  const sql = `SELECT * FROM user WHERE user_id = '${id}' AND password = '${password}';`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
+  } else {
+    const sql = `SELECT * FROM user WHERE user_id = '${id}' AND password = '${password}';`;
+    connection.query(sql, (error, rows) => {
+      try {
         if (rows.length == 0) {
-          res.status(400).json({
-            message: "Login failed",
+          res.status(404).json({
+            message: "user info does not exist",
+            statusCode: 404,
           });
         } else {
-          res.status(200).json({
+          res.json({
             message: "Login Success",
+            statusCode: 200,
           });
         }
+      } catch (error) {
+        res.json({
+          message: "Unexpected Error",
+          statusCode: 500,
+        });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
+    });
+  }
 });
 
 // join
 app.post("/join", (req, res) => {
   const { id, nickname, password } = req.body;
-  if (id == undefined || nickname == undefined || password == undefined) {
-    res.status(400).json({
-      message: "invalid value",
-    });
-  }
-  const sql = `INSERT INTO user (user_id, nickname, password, createdAt, updatedAt) VALUES ('${id}', '${nickname}', '${password}', NOW(), NOW());`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
-        res.status(200).json({
-          message: "Join Success",
-        });
-        if (rows.length == 0) {
-          res.status(400).json({
+  if (id !== undefined && nickname !== undefined && password !== undefined) {
+    const sql = `INSERT INTO user (user_id, nickname, password, createdAt, updatedAt) VALUES ('${id}', '${nickname}', '${password}', NOW(), NOW());`;
+    connection.query(sql, (error, rows) => {
+      try {
+        if (rows.length !== 0) {
+          res.json({
+            message: "Join Success",
+            statusCode: 200,
+          });
+        } else {
+          res.state(404).json({
             message: "Join Failed",
+            statusCode: 404,
           });
         }
+      } catch (error) {
+        res.json({
+          message: "Unexpected Error",
+          statusCode: 500,
+        });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
+    });
+  } else {
+    res.status(400).json({
+      message: "invalid value",
+      statusCode: 400,
+    });
+  }
 });
 
 // find password
+app.get("/findpw/", (req, res) => {
+  res.sendStatus(404);
+});
 app.get("/findpw/:id", (req, res) => {
-  if (req.params.id == undefined) {
+  let paramsId = req.params.id.trim();
+  if (paramsId == undefined || null) {
     res.status(400).json({
       message: "invalid value",
+      statusCode: 400,
     });
-  }
-  const sql = `SELECT password FROM user WHERE user_id = '${req.params.id}';`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (rows == undefined) {
-        res.status(400).json({
-          message: "no result",
-        });
-      } else if (res.statusCode === 200 && rows.length !== 0) {
-        let password = Object.values(JSON.parse(JSON.stringify(rows)))[0].password;
-        res.status(200).json({
-          message: "Password founded",
-          data: password,
+  } else {
+    const sql = `SELECT password FROM user WHERE user_id = '${paramsId}';`;
+    connection.query(sql, (error, rows) => {
+      try {
+        if (rows.length == 0) {
+          res.status(404).json({
+            message: "no result",
+            statusCode: 404,
+          });
+        } else {
+          let password = Object.values(JSON.parse(JSON.stringify(rows)))[0].password;
+          res.json({
+            message: "Password founded",
+            statusCode: 200,
+            data: password,
+          });
+        }
+      } catch (error) {
+        res.json({
+          message: "Unexpected Error",
+          statusCode: 500,
         });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
+    });
+  }
 });
 
 // board list
@@ -177,8 +201,9 @@ app.get("/board", (req, res) => {
         });
       }
     } catch (error) {
-      res.status(500).json({
+      res.json({
         message: "Unexpected Error",
+        statusCode: 500,
       });
     }
   });
@@ -187,48 +212,75 @@ app.get("/board", (req, res) => {
 // write
 app.post("/write", (req, res) => {
   const { title, content, writer } = req.body;
-  if (title == undefined || content == undefined || writer == undefined) {
-    res.status(400).json({
-      message: "invalid value",
-    });
-  }
-  const sql = `INSERT INTO board (title, content, hits, comment_count, writer, createdAt, updatedAt) VALUES ('${title}', '${content}',0, 0,'${writer}', NOW(), NOW());`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200 && rows.length !== 0) {
-        res.status(200).json({
-          message: "success",
-          data: rows,
+  if (title !== undefined && content !== undefined && writer !== undefined) {
+    const sql = `INSERT INTO board (title, content, hits, comment_count, writer, createdAt, updatedAt) VALUES ('${title}', '${content}',0, 0,'${writer}', NOW(), NOW());`;
+    connection.query(sql, (error, rows) => {
+      try {
+        if (rows.length !== 0) {
+          res.json({
+            message: "success",
+            statusCode: 200,
+          });
+        }
+      } catch (error) {
+        res.json({
+          message: "Unexpected Error",
+          statusCode: 500,
         });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
+    });
+  } else {
+    res.status(400).json({
+      message: "invalid value",
+      statusCode: 400,
+    });
+  }
 });
 
 // detail
+app.get(`/board/`, (req, res) => {
+  res.sendStatus(404);
+});
 app.get(`/board/:id`, (req, res) => {
-  if (req.params.id == null || undefined) {
+  let paramsId = req.params.id.trim();
+  if (paramsId == null || undefined) {
     res.status(400).json({
       message: "invalid value",
+      statusCode: 400,
     });
   }
-  const sql = `SELECT * FROM board WHERE board_id = '${req.params.id}';`;
-  connection.query(sql, (error, rows) => {
+  const checkId = `SELECT * FROM board WHERE board_id = '${paramsId}'`;
+  connection.query(checkId, (error, rows) => {
     try {
-      if (res.statusCode === 200) {
-        const detail = Object.values(JSON.parse(JSON.stringify(rows)))[0];
-        res.status(200).json({
-          message: "Success",
-          data: detail,
+      if (rows.length === 0) {
+        res.status(404).json({
+          message: "board_id is not founded",
+          statusCode: 404,
+        });
+      } else {
+        const sql = `SELECT * FROM board WHERE board_id = '${paramsId}';`;
+        connection.query(sql, (error, rows) => {
+          try {
+            if (rows !== 0 && res.statusCode === 200) {
+              const detail = Object.values(JSON.parse(JSON.stringify(rows)))[0];
+              res.json({
+                message: "Success",
+                statusCode: 200,
+                data: detail,
+              });
+            }
+          } catch (error) {
+            res.json({
+              message: "Unexpected Error",
+              statusCode: 500,
+            });
+          }
         });
       }
     } catch (error) {
       res.status(500).json({
         message: "Unexpected Error",
+        statusCode: 500,
       });
     }
   });
@@ -237,135 +289,68 @@ app.get(`/board/:id`, (req, res) => {
 // edit
 app.post("/edit", (req, res) => {
   const { title, content, board_id } = req.body;
-  if (title == undefined || content == undefined || board_id == undefined) {
-    res.status(400).json({
-      message: "invalid value",
-    });
-  }
-  const sql = `UPDATE board SET title = '${title}',content = '${content}', updatedAt = CURRENT_TIMESTAMP WHERE board_id = '${board_id}';`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
-        res.status(200).json({
-          message: "edit complete",
+  if (title !== undefined && content !== undefined && board_id !== undefined) {
+    const sql = `UPDATE board SET title = '${title}',content = '${content}', updatedAt = CURRENT_TIMESTAMP WHERE board_id = '${board_id}';`;
+    connection.query(sql, (error, rows) => {
+      try {
+        if (rows !== 0 && res.statusCode === 200) {
+          res.json({
+            message: "edit complete",
+            statusCode: 200,
+          });
+        }
+      } catch (error) {
+        res.json({
+          message: "Unexpected Error",
+          statusCode: 500,
         });
       }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
+    });
+  } else {
+    res.status(400).json({
+      message: "invalid value",
+      statusCode: 400,
+    });
+  }
 });
 
 // delete
 app.get("/delete/:id", (req, res) => {
-  if (req.params.id == null || undefined) {
+  let paramsId = req.params.id.trim();
+  if (!paramsId) {
     res.status(400).json({
-      message: "invalid value",
+      message: "Invalid value",
+      statusCode: 400,
     });
   }
-  const sql = `DELETE FROM board WHERE board_id = '${req.params.id}';`;
-  connection.query(sql, (error, rows) => {
+  const checkId = `SELECT * FROM board WHERE board_id = '${paramsId}'`;
+  connection.query(checkId, (error, rows) => {
     try {
-      if (res.statusCode === 200) {
-        res.status(200).json({
-          message: "delete",
+      if (rows.length === 0) {
+        res.status(404).json({
+          message: "board_id is not founded",
+          statusCode: 404,
+        });
+      } else {
+        const sql = `DELETE FROM board WHERE board_id = '${paramsId}'`;
+        connection.query(sql, (error, rows) => {
+          try {
+            res.status(200).json({
+              message: "Delete successful",
+              statusCode: 200,
+            });
+          } catch (error) {
+            return res.status(500).json({
+              message: "Unexpected Error",
+              statusCode: 500,
+            });
+          }
         });
       }
     } catch (error) {
       res.status(500).json({
         message: "Unexpected Error",
-      });
-    }
-  });
-});
-
-// search by title
-app.get("/searchtitle/:title", (req, res) => {
-  if (req.params.title == null || undefined) {
-    res.status(400).json({
-      message: "invalid value",
-    });
-  }
-  const sql = `SELECT * FROM board WHERE title LIKE '%${req.params.title}%';`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
-        const result = Object.values(JSON.parse(JSON.stringify(rows)));
-        res.status(200).json({
-          message: "result",
-          data: result,
-        });
-        if (rows == undefined) {
-          res.status(200).json({
-            message: "no result",
-          });
-        }
-      }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
-});
-
-// search by content
-app.get("/searchcontent/:content", (req, res) => {
-  if (req.params.content == null || undefined) {
-    res.status(400).json({
-      message: "invalid value",
-    });
-  }
-  const sql = `SELECT * FROM board WHERE title LIKE '%${req.params.content}%';`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
-        const result = Object.values(JSON.parse(JSON.stringify(rows)));
-        res.status(200).json({
-          message: "result",
-          data: result,
-        });
-        if (rows == undefined) {
-          res.status(200).json({
-            message: "no result",
-          });
-        }
-      }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
-      });
-    }
-  });
-});
-
-// search by title+content
-app.get("/search/:all", (req, res) => {
-  if (req.params.all == null || undefined) {
-    res.status(400).json({
-      message: "invalid value",
-    });
-  }
-  const sql = `SELECT * FROM board WHERE title LIKE '%${req.params.all}%' OR content LIKE '%${req.params.all}%';`;
-  connection.query(sql, (error, rows) => {
-    try {
-      if (res.statusCode === 200) {
-        const result = Object.values(JSON.parse(JSON.stringify(rows)));
-        res.status(200).json({
-          message: "result",
-          data: result,
-        });
-        if (rows == undefined) {
-          res.status(200).json({
-            message: "no result",
-          });
-        }
-      }
-    } catch (error) {
-      res.status(500).json({
-        message: "Unexpected Error",
+        statusCode: 500,
       });
     }
   });
