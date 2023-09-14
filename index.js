@@ -332,7 +332,7 @@ app.get("/delete/:id", (req, res) => {
           statusCode: 404,
         });
       } else {
-        const sql = `DELETE FROM board WHERE board_id = '${paramsId}'`;
+        const sql = `UPDATE board SET isDelete = 0 WHERE board_id = '${paramsId}';`;
         connection.query(sql, (error, rows) => {
           try {
             res.status(200).json({
