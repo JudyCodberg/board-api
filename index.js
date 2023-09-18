@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const connection = require("./config/config.js");
 
+const PAGE_NUM = 15;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -187,7 +189,40 @@ app.get("/findpw/:id", (req, res) => {
 
 // board list
 app.get("/board", (req, res) => {
-  const sql = "SELECT * from board";
+  const allPage = connection.query("SELECT count(*) as count FROM board;", (err, rows) => {
+    const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
+    console.log(Math.ceil(countArticle / PAGE_NUM));
+  });
+
+  const pageNum = req.query.page;
+  const sql = `SELECT * from board LIMIT ${pageNum}, ${PAGE_NUM};`;
+  connection.query(sql, (error, rows) => {
+    try {
+      if (res.statusCode === 200) {
+        res.status(200).json({
+          message: "Success",
+          data: rows,
+        });
+      } else {
+        res.status(400).json({
+          message: "no list",
+        });
+      }
+    } catch (error) {
+      res.json({
+        message: "Unexpected Error",
+        statusCode: 500,
+      });
+    }
+  });
+});
+
+// search
+app.get("/search", (req, res) => {
+  const pageNum = req.query.page;
+  const searchTitle = req.query.title;
+  const searchContent = req.query.content;
+  const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' AND content LIKE '%${searchContent}%' LIMIT ${PAGE_NUM};`;
   connection.query(sql, (error, rows) => {
     try {
       if (res.statusCode === 200) {
