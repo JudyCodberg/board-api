@@ -91,7 +91,7 @@ app.post("/join", (req, res) => {
   try {
     const { id, nickname, password } = req.body;
     if (id !== undefined && nickname !== undefined && password !== undefined) {
-      const sql = `INSERT INTO user (user_id, nickname, password, createdAt, updatedAt) VALUES ('${id}', '${nickname}', '${makeHash}', NOW(), NOW());`;
+      const sql = `INSERT INTO user (user_id, nickname, password, createdAt, updatedAt) VALUES ('${id}', '${nickname}', '${password}', NOW(), NOW());`;
       connection.query(sql, (error, rows) => {
         if (rows.length !== 0) {
           func.response(res, "Join Success", 200, null);
@@ -136,10 +136,12 @@ app.get("/findpw/:id", (req, res) => {
 // board list
 app.get("/board", (req, res) => {
   try {
-    const pageSize = req.query.page; // 한 페이지마다 보여줄 글 개수
-    const pageNum = req.query.num; // 현재 페이지 번호(1페이지, 2페이지..), offset
-    const searchTitle = req.query.title;
-    const searchContent = req.query.content;
+    const pageSize = req.query.num; // 한 페이지마다 보여줄 글 개수
+    const pageNum = req.query.page; // 현재 페이지 번호(1페이지, 2페이지..), offset
+
+    const target = req.query.target;
+    const value = req.query.value;
+
     const offset = (pageNum - 1) * pageSize;
     if (pageNum <= 0 || pageSize <= 0 || pageNum == undefined || pageSize == undefined) {
       func.response(res, "invalid parameter", 400, null);
@@ -150,78 +152,61 @@ app.get("/board", (req, res) => {
         if (pageSize > countArticle - 1) {
           func.response(res, "no data", 400, null);
         } else {
-          // 제목 으로 검색
-          if (searchTitle !== undefined && searchContent == undefined) {
-            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%'`;
+          if (target == "title") {
+            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${value}%'`;
             connection.query(sql, (error, rows) => {
               const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-              if (Math.ceil(countResult / pageSize) >= pageNum) {
-                const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' LIMIT ${offset}, ${pageSize};`;
-                connection.query(sql, (error, rows) => {
-                  if (res.statusCode === 200) {
-                    if (pageSize > countResult - 1) {
-                      func.response(res, "no title result", 400, null);
-                    } else {
-                      func.response(res, "Success", 200, { rows, countResult });
-                    }
+              const sql = `SELECT * from board WHERE title LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+              connection.query(sql, (error, rows) => {
+                if (res.statusCode === 200) {
+                  if (pageSize * pageNum > countResult) {
+                    func.response(res, "there is no more data", 400, countResult);
                   } else {
-                    func.response(res, "no list", 400, null);
+                    func.response(res, "Success", 200, { rows, countResult });
                   }
-                });
-              } else {
-                func.response(res, "no list", 400, null);
-              }
+                } else {
+                  func.response(res, "no list", 400, null);
+                }
+              });
             });
-          }
-          // 내용 으로 검색
-          else if (searchContent !== undefined && searchTitle == undefined) {
-            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchContent}%'`;
+          } else if (target == "content") {
+            const sql = `SELECT COUNT(*) as count from board WHERE content LIKE '%${value}%'`;
             connection.query(sql, (error, rows) => {
               const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-              if (Math.ceil(countResult / pageSize) >= pageNum) {
-                const sql = `SELECT * from board WHERE content LIKE '%${searchContent}%' LIMIT ${offset}, ${pageSize};`;
-                connection.query(sql, (error, rows) => {
-                  if (res.statusCode === 200) {
-                    if (pageSize > countResult - 1) {
-                      func.response(res, "no content result", 400, null);
-                    } else {
-                      func.response(res, "Success", 200, { rows, countResult });
-                    }
+              const sql = `SELECT * from board WHERE content LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+              connection.query(sql, (error, rows) => {
+                if (res.statusCode === 200) {
+                  if (pageSize * pageNum > countResult) {
+                    func.response(res, "there is no more data", 400, countResult);
                   } else {
-                    func.response(res, "no lissdsdsdsd", 400, null);
+                    func.response(res, "Success", 200, { rows, countResult });
                   }
-                });
-              } else {
-                func.response(res, "no list", 400, null);
-              }
+                } else {
+                  func.response(res, "no list", 400, null);
+                }
+              });
             });
-          }
-          // 제목 + 내용 으로 검색
-          else if (searchContent !== undefined && searchTitle !== undefined) {
-            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%'`;
+          } else if (target == "all") {
+            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${value}%' OR content LIKE '%${value}%'`;
             connection.query(sql, (error, rows) => {
               const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-              if (Math.ceil(countResult / pageSize) >= pageNum) {
-                const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%' LIMIT ${offset}, ${pageSize};`;
-                connection.query(sql, (error, rows) => {
-                  if (res.statusCode === 200) {
-                    if (pageSize > countResult - 1) {
-                      func.response(res, "no result", 400, null);
-                    } else {
-                      func.response(res, "Success", 200, { rows, countResult });
-                    }
+              const sql = `SELECT * from board WHERE title LIKE '%${value}%' OR content LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+              connection.query(sql, (error, rows) => {
+                if (res.statusCode === 200) {
+                  if (pageSize * pageNum > countResult) {
+                    func.response(res, "there is no more data", 400, countResult);
                   } else {
-                    func.response(res, "no list", 400, null);
+                    func.response(res, "Success", 200, { rows, countResult });
                   }
-                });
-              } else {
-                func.response(res, "no list", 400, null);
-              }
+                } else {
+                  func.response(res, "no list", 400, null);
+                }
+              });
             });
           }
           // 일반 페이징
           else {
-            if (Math.ceil(countArticle / pageSize) >= pageNum && pageNum !== undefined && pageNum > 0) {
+            if (Math.ceil(countArticle / pageSize) >= pageNum) {
               const sql = `SELECT * from board LIMIT ${offset}, ${pageSize};`;
               connection.query(sql, (error, rows) => {
                 if (res.statusCode === 200) {
