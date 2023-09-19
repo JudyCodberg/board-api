@@ -196,22 +196,30 @@ app.get("/findpw/:id", (req, res) => {
 // board list
 app.get("/board", (req, res) => {
   try {
-    const allPage = connection.query("SELECT count(*) as count FROM board;", (err, rows) => {
+    const pageNum = req.query.page;
+    const sql = "SELECT count(*) as count FROM board;";
+    connection.query(sql, (err, rows) => {
       const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
       const pagingNum = Math.ceil(countArticle / PAGE_NUM);
-      return pagingNum;
-    });
-    const pageNum = req.query.page;
-    const sql = `SELECT * from board LIMIT ${pageNum}, ${PAGE_NUM};`;
-    connection.query(sql, (error, rows) => {
-      if (res.statusCode === 200) {
-        res.status(200).json({
-          message: "Success",
-          data: rows,
+      if (pageNum > countArticle - 1) {
+        res.status(400).json({
+          message: "no data",
+          statusCode: 400,
         });
       } else {
-        res.status(400).json({
-          message: "no list",
+        const sql = `SELECT * from board LIMIT ${pageNum}, ${PAGE_NUM};`;
+        connection.query(sql, (error, rows) => {
+          if (res.statusCode === 200) {
+            res.status(200).json({
+              message: "Success",
+              data: pagingNum,
+              rows,
+            });
+          } else {
+            res.status(400).json({
+              message: "no list",
+            });
+          }
         });
       }
     });
