@@ -151,73 +151,75 @@ app.get("/board", (req, res) => {
         const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
         if (pageSize > countArticle - 1) {
           func.response(res, "no data", 400, null);
-        } else {
-          if (target == "title") {
-            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${value}%'`;
-            connection.query(sql, (error, rows) => {
-              const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-              const sql = `SELECT * from board WHERE title LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+        } else if (target !== undefined && target.length > 0) {
+          if (value !== undefined || value.length > 0) {
+            if (target == "title") {
+              const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${value}%'`;
               connection.query(sql, (error, rows) => {
-                if (res.statusCode === 200) {
-                  if (pageSize * pageNum > countResult) {
-                    func.response(res, "there is no more data", 400, countResult);
+                const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+                const sql = `SELECT * from board WHERE title LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+                connection.query(sql, (error, rows) => {
+                  if (res.statusCode === 200) {
+                    if (pageSize * pageNum > countResult) {
+                      func.response(res, "there is no more data", 400, countResult);
+                    } else {
+                      func.response(res, "Success", 200, { rows, countResult });
+                    }
                   } else {
-                    func.response(res, "Success", 200, { rows, countResult });
+                    func.response(res, "no list", 400, null);
                   }
-                } else {
-                  func.response(res, "no list", 400, null);
-                }
+                });
               });
-            });
-          } else if (target == "content") {
-            const sql = `SELECT COUNT(*) as count from board WHERE content LIKE '%${value}%'`;
-            connection.query(sql, (error, rows) => {
-              const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-              const sql = `SELECT * from board WHERE content LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+            } else if (target == "content") {
+              const sql = `SELECT COUNT(*) as count from board WHERE content LIKE '%${value}%'`;
               connection.query(sql, (error, rows) => {
-                if (res.statusCode === 200) {
-                  if (pageSize * pageNum > countResult) {
-                    func.response(res, "there is no more data", 400, countResult);
+                const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+                const sql = `SELECT * from board WHERE content LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+                connection.query(sql, (error, rows) => {
+                  if (res.statusCode === 200) {
+                    if (pageSize * pageNum > countResult) {
+                      func.response(res, "there is no more data", 400, countResult);
+                    } else {
+                      func.response(res, "Success", 200, { rows, countResult });
+                    }
                   } else {
-                    func.response(res, "Success", 200, { rows, countResult });
+                    func.response(res, "no list", 400, null);
                   }
-                } else {
-                  func.response(res, "no list", 400, null);
-                }
+                });
               });
-            });
-          } else if (target == "all") {
-            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${value}%' OR content LIKE '%${value}%'`;
-            connection.query(sql, (error, rows) => {
-              const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-              const sql = `SELECT * from board WHERE title LIKE '%${value}%' OR content LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+            } else if (target == "all") {
+              const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${value}%' OR content LIKE '%${value}%'`;
               connection.query(sql, (error, rows) => {
-                if (res.statusCode === 200) {
-                  if (pageSize * pageNum > countResult) {
-                    func.response(res, "there is no more data", 400, countResult);
+                const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+                const sql = `SELECT * from board WHERE title LIKE '%${value}%' OR content LIKE '%${value}%' LIMIT ${offset}, ${pageSize};`;
+                connection.query(sql, (error, rows) => {
+                  if (res.statusCode === 200) {
+                    if (pageSize * pageNum > countResult) {
+                      func.response(res, "there is no more data", 400, countResult);
+                    } else {
+                      func.response(res, "Success", 200, { rows, countResult });
+                    }
                   } else {
-                    func.response(res, "Success", 200, { rows, countResult });
+                    func.response(res, "no list", 400, null);
                   }
-                } else {
-                  func.response(res, "no list", 400, null);
-                }
+                });
               });
-            });
-          }
-          // 일반 페이징
-          else {
-            if (Math.ceil(countArticle / pageSize) >= pageNum) {
-              const sql = `SELECT * from board LIMIT ${offset}, ${pageSize};`;
-              connection.query(sql, (error, rows) => {
-                if (res.statusCode === 200) {
-                  func.response(res, "Success", 200, { rows, countArticle });
-                } else {
-                  func.response(res, "no list", 400, null);
-                }
-              });
-            } else {
-              func.response(res, "no list", 400, null);
             }
+          } else {
+            func.response(res, "no search value", 400, null);
+          }
+        } else {
+          if (Math.ceil(countArticle / pageSize) >= pageNum && target == undefined) {
+            const sql = `SELECT * from board LIMIT ${offset}, ${pageSize};`;
+            connection.query(sql, (error, rows) => {
+              if (res.statusCode === 200) {
+                func.response(res, "Success", 200, { rows, countArticle });
+              } else {
+                func.response(res, "no list", 400, null);
+              }
+            });
+          } else {
+            func.response(res, "no list", 400, null);
           }
         }
       });
