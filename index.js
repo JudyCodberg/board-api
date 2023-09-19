@@ -1,86 +1,63 @@
 const express = require("express");
 const app = express();
-const connection = require("./config/config.js");
 
-const PAGE_NUM = 15;
+const connection = require("./config/config.js");
+const func = require("./response.js");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  res.send("connected");
+  func.response(res, "connected", 200, null);
 });
 
 // id check
 app.get("/checkId/", (req, res) => {
-  res.sendStatus(404);
+  func.response(res, "error", 404, null);
 });
 
 app.get("/checkid/:id", (req, res) => {
   try {
     let paramsId = req.params.id.trim();
-    if (paramsId.length == 0 || paramsId == null || undefined) {
-      res.status(400).json({
-        message: "id invalidate",
-        statusCode: 400,
-      });
+    if (paramsId.length == 0 || paramsId == null || paramsId == undefined) {
+      func.response(res, "id invalidate", 400, null);
     } else {
       const sql = `SELECT * FROM user WHERE user_id = '${paramsId}'`;
       connection.query(sql, (error, rows) => {
         if (rows.length == 0) {
-          res.json({
-            message: "Avaliable Id",
-            statusCode: 200,
-          });
+          func.response(res, "Avaliable Id", 200, null);
         } else {
-          res.status(404).json({
-            message: "Already Exist",
-            statusCode: 404,
-          });
+          func.response(res, "Already Exist", 404, null);
         }
       });
     }
   } catch (error) {
-    res.status(500).json({
-      message: error,
-    });
+    func.response(res, "error", 500, error);
   }
 });
 
 // nickname check
 app.get("/checknick/", (req, res) => {
-  res.sendStatus(404);
+  func.response(res, "error", 404, null);
 });
 
 app.get("/checknick/:name", (req, res) => {
   try {
     let paramsName = req.params.name.trim();
-    if (paramsName.length == 0 || paramsName == null || undefined) {
-      res.status(400).json({
-        message: "nickname invalidate",
-        statusCode: 400,
-      });
+    if (paramsName.length == 0 || paramsName == null || paramsName == undefined) {
+      func.response(res, "nickname invalidate", 400, null);
     } else {
       const sql = `SELECT * FROM user WHERE nickname= '${paramsName}'`;
       connection.query(sql, (error, rows) => {
         if (rows.length == 0) {
-          res.json({
-            message: "Avaliable nickname",
-            statusCode: 200,
-          });
+          func.response(res, "Avaliable nickname", 200, null);
         } else {
-          res.status(404).json({
-            message: "Already Exist",
-            statusCode: 404,
-          });
+          func.response(res, "Already Exist", 404, null);
         }
       });
     }
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
@@ -89,35 +66,23 @@ app.post("/login", (req, res) => {
   try {
     const { id, password } = req.body;
     if (id == undefined || password == undefined) {
-      res.status(400).json({
-        message: "invalid value",
-        statusCode: 400,
-      });
+      func.response(res, "invalid value", 400, null);
     } else {
       const sql = `SELECT * FROM user WHERE user_id = '${id}' AND password = '${password}';`;
       connection.query(sql, (error, rows) => {
         try {
           if (rows.length == 0) {
-            res.status(404).json({
-              message: "user info does not exist",
-              statusCode: 404,
-            });
+            func.response(res, "user info does not exist", 404, null);
           } else {
-            res.json({
-              message: "Login Success",
-              statusCode: 200,
-            });
+            func.response(res, "Login Success", 200, null);
           }
         } catch (error) {
-          console.log(error);
+          func.response(res, "Unexpected Error", 500, error);
         }
       });
     }
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, error);
   }
 });
 
@@ -129,28 +94,16 @@ app.post("/join", (req, res) => {
       const sql = `INSERT INTO user (user_id, nickname, password, createdAt, updatedAt) VALUES ('${id}', '${nickname}', '${makeHash}', NOW(), NOW());`;
       connection.query(sql, (error, rows) => {
         if (rows.length !== 0) {
-          res.json({
-            message: "Join Success",
-            statusCode: 200,
-          });
+          func.response(res, "Join Success", 200, null);
         } else {
-          res.state(404).json({
-            message: "Join Failed",
-            statusCode: 404,
-          });
+          func.response(res, "Join Failed", 404, null);
         }
       });
     } else {
-      res.status(400).json({
-        message: "invalid value",
-        statusCode: 400,
-      });
+      func.response(res, "invalid value", 400, null);
     }
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, error);
   }
 });
 
@@ -162,99 +115,115 @@ app.get("/findpw/", (req, res) => {
 app.get("/findpw/:id", (req, res) => {
   try {
     let paramsId = req.params.id.trim();
-    if (paramsId == undefined || null) {
-      res.status(400).json({
-        message: "invalid value",
-        statusCode: 400,
-      });
+    if (paramsId == undefined || paramsId == null) {
+      func.response(res, "invalid value", 400, null);
     } else {
       const sql = `SELECT password FROM user WHERE user_id = '${paramsId}';`;
       connection.query(sql, (error, rows) => {
         if (rows.length == 0) {
-          res.status(404).json({
-            message: "no result",
-            statusCode: 404,
-          });
+          func.response(res, "no result", 404, null);
         } else {
           let password = Object.values(JSON.parse(JSON.stringify(rows)))[0].password;
-          res.json({
-            message: "Password founded",
-            statusCode: 200,
-            data: password,
-          });
+          func.response(res, "Password founded", 200, password);
         }
       });
     }
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
 // board list
 app.get("/board", (req, res) => {
   try {
-    const pageNum = req.query.page;
-    const sql = "SELECT count(*) as count FROM board;";
-    connection.query(sql, (err, rows) => {
-      const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
-      const pagingNum = Math.ceil(countArticle / PAGE_NUM);
-      if (pageNum > countArticle - 1) {
-        res.status(400).json({
-          message: "no data",
-          statusCode: 400,
-        });
-      } else {
-        const sql = `SELECT * from board LIMIT ${pageNum}, ${PAGE_NUM};`;
-        connection.query(sql, (error, rows) => {
-          if (res.statusCode === 200) {
-            res.status(200).json({
-              message: "Success",
-              data: pagingNum,
-              rows,
-            });
-          } else {
-            res.status(400).json({
-              message: "no list",
-            });
-          }
-        });
-      }
-    });
-  } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
-  }
-});
-
-// search
-app.get("/search", (req, res) => {
-  try {
-    const pageNum = req.query.page;
+    const pageSize = req.query.page; // 한 페이지마다 보여줄 글 개수
+    const pageNum = req.query.num; // 현재 페이지 번호(1페이지, 2페이지..), offset
     const searchTitle = req.query.title;
     const searchContent = req.query.content;
-    const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' AND content LIKE '%${searchContent}%' LIMIT ${PAGE_NUM};`;
-    connection.query(sql, (error, rows) => {
-      if (res.statusCode === 200) {
-        res.status(200).json({
-          message: "Success",
-          data: rows,
-        });
+    const sql = "SELECT count(*) as count FROM board;";
+
+    connection.query(sql, (err, rows) => {
+      const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
+      if (pageSize > countArticle - 1) {
+        func.response(res, "no data", 400, null);
       } else {
-        res.status(400).json({
-          message: "no list",
-        });
+        // 제목 으로 검색
+        if (searchTitle !== undefined && searchContent == undefined) {
+          const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%'`;
+          connection.query(sql, (error, rows) => {
+            const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+            // const offset = Math.ceil(countResult / pageSize)-1;
+            const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' LIMIT ${pageSize};`;
+            connection.query(sql, (error, rows) => {
+              if (res.statusCode === 200) {
+                if (pageSize > countResult - 1) {
+                  func.response(res, "no title result", 400, null);
+                } else {
+                  func.response(res, "Success", 200, { rows, countResult });
+                }
+              } else {
+                func.response(res, "no list", 400, null);
+              }
+            });
+          });
+        }
+        // 내용 으로 검색
+        else if (searchContent !== undefined && searchTitle == undefined) {
+          const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchContent}%'`;
+          connection.query(sql, (error, rows) => {
+            const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+            const sql = `SELECT * from board WHERE content LIKE '%${searchContent}%' LIMIT ${pageSize};`;
+            connection.query(sql, (error, rows) => {
+              if (res.statusCode === 200) {
+                if (pageSize > countResult - 1) {
+                  func.response(res, "no content result", 400, null);
+                } else {
+                  func.response(res, "Success", 200, { rows, countResult });
+                }
+              } else {
+                func.response(res, "no lissdsdsdsd", 400, null);
+              }
+            });
+          });
+        }
+        // 제목 + 내용 으로 검색
+        else if (searchContent !== undefined && searchTitle !== undefined) {
+          const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%'`;
+          connection.query(sql, (error, rows) => {
+            const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+            const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%' LIMIT ${pageSize};`;
+            connection.query(sql, (error, rows) => {
+              if (res.statusCode === 200) {
+                if (pageSize > countResult - 1) {
+                  func.response(res, "no result", 400, null);
+                } else {
+                  func.response(res, "Success", 200, { rows, countResult });
+                }
+              } else {
+                func.response(res, "no list", 400, null);
+              }
+            });
+          });
+        }
+        // 일반 페이징
+        else {
+          if (Math.ceil(countArticle / pageSize) >= pageNum && pageNum !== undefined && pageNum > 0) {
+            const sql = `SELECT * from board LIMIT ${(pageNum - 1) * pageSize}, ${pageSize};`;
+            connection.query(sql, (error, rows) => {
+              if (res.statusCode === 200) {
+                func.response(res, "Success", 200, { rows, countArticle });
+              } else {
+                func.response(res, "no list", 400, null);
+              }
+            });
+          } else {
+            func.response(res, "no list", 400, null);
+          }
+        }
       }
     });
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
@@ -266,23 +235,14 @@ app.post("/write", (req, res) => {
       const sql = `INSERT INTO board (title, content, hits, comment_count, writer, createdAt, updatedAt) VALUES ('${title}', '${content}',0, 0,'${writer}', NOW(), NOW());`;
       connection.query(sql, (error, rows) => {
         if (rows.length !== 0) {
-          res.json({
-            message: "success",
-            statusCode: 200,
-          });
+          func.response(res, "Success", 200, rows);
         }
       });
     } else {
-      res.status(400).json({
-        message: "invalid value",
-        statusCode: 400,
-      });
+      func.response(res, "invalid value", 400, null);
     }
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
@@ -294,41 +254,25 @@ app.get(`/board/`, (req, res) => {
 app.get(`/board/:id`, (req, res) => {
   try {
     let paramsId = req.params.id.trim();
-    if (paramsId == null || undefined) {
-      res.status(400).json({
-        message: "invalid value",
-        statusCode: 400,
-      });
+    if (paramsId == null && paramsId == undefined) {
+      func.response(res, "invalid value", 400, null);
     }
     const checkId = `SELECT * FROM board WHERE board_id = '${paramsId}'`;
     connection.query(checkId, (error, rows) => {
       if (rows.length === 0) {
-        res.status(404).json({
-          message: "board_id is not founded",
-          statusCode: 404,
-        });
+        func.response(res, "board_id is not founded", 404, null);
       } else {
         connection.query(checkId, (error, rows) => {
           if (rows !== 0 && res.statusCode === 200) {
             const detail = Object.values(JSON.parse(JSON.stringify(rows)))[0];
-            res.json({
-              message: "Success",
-              statusCode: 200,
-              data: detail,
-            });
+            func.response(res, "Success", 200, detail);
           }
-          res.json({
-            message: "Unexpected Error",
-            statusCode: 500,
-          });
+          func.response(res, "Unexpected Error", 500, null);
         });
       }
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
@@ -340,23 +284,14 @@ app.post("/edit", (req, res) => {
       const sql = `UPDATE board SET title = '${title}',content = '${content}', updatedAt = CURRENT_TIMESTAMP WHERE board_id = '${board_id}';`;
       connection.query(sql, (error, rows) => {
         if (rows !== 0 && res.statusCode === 200) {
-          res.json({
-            message: "edit complete",
-            statusCode: 200,
-          });
+          func.response(res, "edit complete", 200, null);
         }
       });
     } else {
-      res.status(400).json({
-        message: "invalid value",
-        statusCode: 400,
-      });
+      func.response(res, "invalid value", 400, null);
     }
   } catch (error) {
-    res.json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
@@ -365,40 +300,25 @@ app.get("/delete/:id", (req, res) => {
   try {
     let paramsId = req.params.id.trim();
     if (!paramsId) {
-      res.status(400).json({
-        message: "Invalid value",
-        statusCode: 400,
-      });
+      func.response(res, "invalid value", 400, null);
     }
     const checkId = `SELECT * FROM board WHERE board_id = '${paramsId}'`;
     connection.query(checkId, (error, rows) => {
       if (rows.length === 0) {
-        res.status(404).json({
-          message: "board_id is not founded",
-          statusCode: 404,
-        });
+        func.response(res, "board_id is not foundede", 404, null);
       } else {
         const sql = `UPDATE board SET isDelete = 0 WHERE board_id = '${paramsId}';`;
         connection.query(sql, (error, rows) => {
           try {
-            res.status(200).json({
-              message: "Delete successful",
-              statusCode: 200,
-            });
+            func.response(res, "Delete successful", 200, null);
           } catch (error) {
-            return res.status(500).json({
-              message: "Unexpected Error",
-              statusCode: 500,
-            });
+            func.response(res, "Unexpected Error", 500, null);
           }
         });
       }
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Unexpected Error",
-      statusCode: 500,
-    });
+    func.response(res, "Unexpected Error", 500, null);
   }
 });
 
