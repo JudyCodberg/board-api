@@ -140,88 +140,103 @@ app.get("/board", (req, res) => {
     const pageNum = req.query.num; // 현재 페이지 번호(1페이지, 2페이지..), offset
     const searchTitle = req.query.title;
     const searchContent = req.query.content;
-    const sql = "SELECT count(*) as count FROM board;";
-
-    connection.query(sql, (err, rows) => {
-      const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
-      if (pageSize > countArticle - 1) {
-        func.response(res, "no data", 400, null);
-      } else {
-        // 제목 으로 검색
-        if (searchTitle !== undefined && searchContent == undefined) {
-          const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%'`;
-          connection.query(sql, (error, rows) => {
-            const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-            // const offset = Math.ceil(countResult / pageSize)-1;
-            const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' LIMIT ${pageSize};`;
+    const offset = (pageNum - 1) * pageSize;
+    if (pageNum <= 0 || pageSize <= 0 || pageNum == undefined || pageSize == undefined) {
+      func.response(res, "invalid parameter", 400, null);
+    } else {
+      const sql = "SELECT count(*) as count FROM board;";
+      connection.query(sql, (err, rows) => {
+        const countArticle = JSON.parse(JSON.stringify(rows))[0].count;
+        if (pageSize > countArticle - 1) {
+          func.response(res, "no data", 400, null);
+        } else {
+          // 제목 으로 검색
+          if (searchTitle !== undefined && searchContent == undefined) {
+            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%'`;
             connection.query(sql, (error, rows) => {
-              if (res.statusCode === 200) {
-                if (pageSize > countResult - 1) {
-                  func.response(res, "no title result", 400, null);
-                } else {
-                  func.response(res, "Success", 200, { rows, countResult });
-                }
+              const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+              if (Math.ceil(countResult / pageSize) >= pageNum) {
+                const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' LIMIT ${offset}, ${pageSize};`;
+                connection.query(sql, (error, rows) => {
+                  if (res.statusCode === 200) {
+                    if (pageSize > countResult - 1) {
+                      func.response(res, "no title result", 400, null);
+                    } else {
+                      func.response(res, "Success", 200, { rows, countResult });
+                    }
+                  } else {
+                    func.response(res, "no list", 400, null);
+                  }
+                });
               } else {
                 func.response(res, "no list", 400, null);
               }
             });
-          });
-        }
-        // 내용 으로 검색
-        else if (searchContent !== undefined && searchTitle == undefined) {
-          const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchContent}%'`;
-          connection.query(sql, (error, rows) => {
-            const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-            const sql = `SELECT * from board WHERE content LIKE '%${searchContent}%' LIMIT ${pageSize};`;
+          }
+          // 내용 으로 검색
+          else if (searchContent !== undefined && searchTitle == undefined) {
+            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchContent}%'`;
             connection.query(sql, (error, rows) => {
-              if (res.statusCode === 200) {
-                if (pageSize > countResult - 1) {
-                  func.response(res, "no content result", 400, null);
-                } else {
-                  func.response(res, "Success", 200, { rows, countResult });
-                }
-              } else {
-                func.response(res, "no lissdsdsdsd", 400, null);
-              }
-            });
-          });
-        }
-        // 제목 + 내용 으로 검색
-        else if (searchContent !== undefined && searchTitle !== undefined) {
-          const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%'`;
-          connection.query(sql, (error, rows) => {
-            const countResult = JSON.parse(JSON.stringify(rows))[0].count;
-            const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%' LIMIT ${pageSize};`;
-            connection.query(sql, (error, rows) => {
-              if (res.statusCode === 200) {
-                if (pageSize > countResult - 1) {
-                  func.response(res, "no result", 400, null);
-                } else {
-                  func.response(res, "Success", 200, { rows, countResult });
-                }
+              const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+              if (Math.ceil(countResult / pageSize) >= pageNum) {
+                const sql = `SELECT * from board WHERE content LIKE '%${searchContent}%' LIMIT ${offset}, ${pageSize};`;
+                connection.query(sql, (error, rows) => {
+                  if (res.statusCode === 200) {
+                    if (pageSize > countResult - 1) {
+                      func.response(res, "no content result", 400, null);
+                    } else {
+                      func.response(res, "Success", 200, { rows, countResult });
+                    }
+                  } else {
+                    func.response(res, "no lissdsdsdsd", 400, null);
+                  }
+                });
               } else {
                 func.response(res, "no list", 400, null);
               }
             });
-          });
-        }
-        // 일반 페이징
-        else {
-          if (Math.ceil(countArticle / pageSize) >= pageNum && pageNum !== undefined && pageNum > 0) {
-            const sql = `SELECT * from board LIMIT ${(pageNum - 1) * pageSize}, ${pageSize};`;
+          }
+          // 제목 + 내용 으로 검색
+          else if (searchContent !== undefined && searchTitle !== undefined) {
+            const sql = `SELECT COUNT(*) as count from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%'`;
             connection.query(sql, (error, rows) => {
-              if (res.statusCode === 200) {
-                func.response(res, "Success", 200, { rows, countArticle });
+              const countResult = JSON.parse(JSON.stringify(rows))[0].count;
+              if (Math.ceil(countResult / pageSize) >= pageNum) {
+                const sql = `SELECT * from board WHERE title LIKE '%${searchTitle}%' OR content LIKE '%${searchContent}%' LIMIT ${offset}, ${pageSize};`;
+                connection.query(sql, (error, rows) => {
+                  if (res.statusCode === 200) {
+                    if (pageSize > countResult - 1) {
+                      func.response(res, "no result", 400, null);
+                    } else {
+                      func.response(res, "Success", 200, { rows, countResult });
+                    }
+                  } else {
+                    func.response(res, "no list", 400, null);
+                  }
+                });
               } else {
                 func.response(res, "no list", 400, null);
               }
             });
-          } else {
-            func.response(res, "no list", 400, null);
+          }
+          // 일반 페이징
+          else {
+            if (Math.ceil(countArticle / pageSize) >= pageNum && pageNum !== undefined && pageNum > 0) {
+              const sql = `SELECT * from board LIMIT ${offset}, ${pageSize};`;
+              connection.query(sql, (error, rows) => {
+                if (res.statusCode === 200) {
+                  func.response(res, "Success", 200, { rows, countArticle });
+                } else {
+                  func.response(res, "no list", 400, null);
+                }
+              });
+            } else {
+              func.response(res, "no list", 400, null);
+            }
           }
         }
-      }
-    });
+      });
+    }
   } catch (error) {
     func.response(res, "Unexpected Error", 500, null);
   }
