@@ -1,61 +1,48 @@
 const connection = require("../config/config");
-
-exports.checkId = (userId) => {
-  const sql = `SELECT * FROM user WHERE account = '${userId}'`;
+const query = (sql, values) => {
   return new Promise(function (resolve, reject) {
-    connection.query(sql, (error, result) => {
+    connection.query(sql, values, (error, result) => {
       if (error) {
         reject(error);
       }
-      resolve(result.length);
+      resolve(result);
     });
   });
+};
+
+exports.checkId = (userId) => {
+  const sql = `SELECT * FROM user WHERE account = ?`;
+  const values = userId;
+  return query(sql, values);
 };
 
 exports.checkName = (nickname) => {
-  const sql = `SELECT * FROM user WHERE nickname= '${nickname}'`;
-  return new Promise(function (resolve, reject) {
-    connection.query(sql, (error, result) => {
-      if (error) {
-        reject(error);
-      }
-      resolve(result.length);
-    });
-  });
+  const sql = `SELECT * FROM user WHERE nickname= ?`;
+  const values = nickname;
+  return query(sql, values);
 };
 
 exports.join = (id, nickname, password) => {
-  const sql = `INSERT INTO user (account, nickname, password, createdAt, updatedAt) VALUES ('${id}', '${nickname}', '${password}', NOW(), NOW());`;
-  return new Promise(function (resolve, reject) {
-    connection.query(sql, (error, result) => {
-      if (error) {
-        reject(error);
-      }
-      resolve(result);
-    });
-  });
+  const sql = `INSERT INTO user (account, nickname, password, createdAt, updatedAt) VALUES (?,?,?,?,?);`;
+  const values = [id, nickname, password, new Date(), new Date()];
+  return query(sql, values);
 };
 
 exports.login = (id, password) => {
-  const sql = `SELECT * FROM user WHERE account = '${id}' AND password = '${password}';`;
+  const sql = `SELECT * FROM user WHERE account = ? AND password = ?;`;
+  const values = [id, password];
+  return query(sql, values);
+};
+
+exports.findpassword = (userId) => {
+  const sql = `SELECT password FROM user WHERE account = ?;`;
+  const values = userId;
   return new Promise(function (resolve, reject) {
-    connection.query(sql, (error, result) => {
+    connection.query(sql, values, (error, result) => {
       if (error) {
         reject(error);
       }
       resolve(result);
-    });
-  });
-};
-
-exports.findpassword = (userId) => {
-  const sql = `SELECT password FROM user WHERE account = '${userId}';`;
-  return new Promise(function (resolve, reject) {
-    connection.query(sql, (error, result) => {
-      if (error) {
-        reject(error);
-      }
-      resolve(Object.values(JSON.parse(JSON.stringify(result)))[0]);
     });
   });
 };

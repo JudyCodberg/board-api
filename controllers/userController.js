@@ -1,17 +1,22 @@
 const userService = require("../services/userService");
-const func = require("../response.js");
+const Response = require("../response.js");
+const CustomErr = require("../customErr");
 
 exports.checkId = async (req, res, next) => {
+  const response = new Response(res);
   try {
     const userId = req.params.id.trim();
     if (userId.length == 0 || userId == undefined) {
-      func.response(res, "id invalidate", 400, null);
+      response.send("id invalidate", 400, null);
     } else {
-      const checkResult = await userService.checkId(userId);
-      if (checkResult !== 0) {
-        func.response(res, "Already Exist", 200, null);
+      const checkResult = await userService
+        .checkId(userId)
+        .then((res) => res)
+        .catch((err) => err);
+      if (checkResult.length !== 0) {
+        response.send("Already Exist", 400, null);
       } else {
-        func.response(res, "Avaliable Id", 200, null);
+        response.send("Avaliable Id", 200, null);
       }
     }
   } catch (err) {
@@ -20,16 +25,20 @@ exports.checkId = async (req, res, next) => {
 };
 
 exports.checkName = async (req, res, next) => {
+  const response = new Response(res);
   try {
     const nickname = req.params.name.trim();
     if (nickname.length == 0 || nickname == undefined) {
-      func.response(res, "nickname invalidate", 400, null);
+      response.send("nickname invalidate", 400, null);
     } else {
-      const checkResult = await userService.checkName(nickname);
-      if (checkResult !== 0) {
-        func.response(res, "Already Exist", 200, null);
+      const checkResult = await userService
+        .checkName(nickname)
+        .then((res) => res)
+        .catch((err) => err);
+      if (checkResult.length !== 0) {
+        response.send("Already Exist", 400, null);
       } else {
-        func.response(res, "Avaliable nickname", 200, null);
+        response.send("Avaliable Id", 200, null);
       }
     }
   } catch (err) {
@@ -38,6 +47,7 @@ exports.checkName = async (req, res, next) => {
 };
 
 exports.join = async (req, res, next) => {
+  const response = new Response(res);
   try {
     const { id, nickname, password } = req.body;
     if (
@@ -48,14 +58,17 @@ exports.join = async (req, res, next) => {
       nickname.length !== 0 &&
       password.length !== 0
     ) {
-      const checkResult = await userService.join(id, nickname, password);
+      const checkResult = await userService
+        .join(id, nickname, password)
+        .then((res) => res)
+        .catch((err) => err);
       if (checkResult !== undefined) {
-        func.response(res, "Join Success", 200, null);
+        response.send("Join Success", 200, null);
       } else {
-        func.response(res, "Join Failed", 404, null);
+        response.send("Join Failed", 404, null);
       }
     } else {
-      func.response(res, "invalid value", 400, null);
+      response.send("invalid value", 400, null);
     }
   } catch (err) {
     next(err);
@@ -63,17 +76,21 @@ exports.join = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
+  const response = new Response(res);
   try {
     const { id, password } = req.body;
     if (id == undefined || password == undefined || id.length == 0 || password.length == 0) {
-      const status = new CustomErr("err", 400);
+      const status = new CustomErr("Parameter is not avaliable", 400);
       next(status);
     } else {
-      const result = await userService.login(id, password);
+      const result = await userService
+        .login(id, password)
+        .then((res) => res)
+        .catch((err) => err);
       if (result.length == 0) {
-        func.response(res, "user info does not exist", 404, null);
+        response.send("user info does not exist", 404, null);
       } else {
-        func.response(res, "Login Success", 200, null);
+        response.send("Login Success", 200, null);
       }
     }
   } catch (err) {
@@ -82,19 +99,20 @@ exports.login = async (req, res, next) => {
 };
 
 exports.findpassword = async (req, res) => {
+  const response = new Response(res);
   try {
     let userId = req.params.id.trim();
     if (userId == undefined || userId.length == 0) {
-      func.response(res, "invalid value", 400, null);
+      response.send("invalid value", 400, null);
     } else {
       const result = await userService.findpassword(userId);
-      if (result == undefined) {
-        func.response(res, "no result", 404, null);
+      if (Object.values(JSON.parse(JSON.stringify(result)))[0] == undefined) {
+        response.send("no result", 404, null);
       } else {
-        func.response(res, "Password founded", 200, result.password);
+        response.send("Password founded", 200, Object.values(JSON.parse(JSON.stringify(result)))[0].password);
       }
     }
   } catch (err) {
-    func.response(res, "Unexpected Error", 500, err);
+    response.send("Unexpected Error", 500, err);
   }
 };
