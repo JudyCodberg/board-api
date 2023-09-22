@@ -1,17 +1,16 @@
 const CustomErr = require("./customErr.js");
+const Response = require("./response.js");
 
 exports.handleError = (err, req, res, next) => {
+  const response = new Response(res);
   if (err instanceof CustomErr) {
-    res.status(err.status).json({
-      message: err.name,
-      statusCode: err.status,
-      data: null,
-    });
+    response.error(err.message, err.status);
+    // res.status(err.status).json({
+    //   message: err.name,
+    //   statusCode: err.status,
+    //   data: null,
+    // });
   } else {
-    res.status(500).json({
-      message: "Server Error",
-      statusCode: 500,
-      data: null,
-    });
+    response.error("Server Error", 500);
   }
 };

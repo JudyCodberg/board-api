@@ -11,11 +11,11 @@ exports.list = async (req, res, next) => {
     const value = req.query.value;
 
     if (pageNum <= 0 || pageSize <= 0 || pageNum == undefined || pageSize == undefined) {
-      response.error("invalid parameter", 400, null);
+      next(new CustomErr("invalid parameter", 400));
     } else {
       const boardCountAll = await boardService.boardCountAll();
       if (boardCountAll - 1 < pageSize) {
-        response.error("no data", 400, null);
+        next(new CustomErr("there is no data", 400));
       } else {
         if (target !== undefined && value !== undefined) {
           if (target == 0) {
@@ -24,7 +24,7 @@ exports.list = async (req, res, next) => {
               .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
               .catch((err) => err);
             if (countNum == 0) {
-              response.error("there is no data", 400, null);
+              next(new CustomErr("there is no data", 400));
             } else {
               const searchTitleData = await boardService
                 .searchTitle(pageSize, pageNum, value)
@@ -38,7 +38,7 @@ exports.list = async (req, res, next) => {
               .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
               .catch((err) => err);
             if (countNum == 0) {
-              response.error("there is no data", 400, null);
+              next(new CustomErr("there is no data", 400));
             } else {
               const searchContentData = await boardService
                 .searchContent(pageSize, pageNum, value)
@@ -52,7 +52,7 @@ exports.list = async (req, res, next) => {
               .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
               .catch((err) => err);
             if (countNum == 0) {
-              response.error("there is no data", 400, null);
+              next(new CustomErr("there is no data", 400));
             } else {
               const searchAllData = await boardService
                 .searchAll(pageSize, pageNum, value)
@@ -61,7 +61,7 @@ exports.list = async (req, res, next) => {
               response.send("Success", 200, { searchAllData, countNum });
             }
           } else {
-            response.error("no search value", 400, null);
+            next(new CustomErr("no search value", 400));
           }
         } else {
           if (Math.ceil(boardCountAll / pageSize) >= pageNum) {
@@ -72,10 +72,10 @@ exports.list = async (req, res, next) => {
             if (getList.length !== 0 && getList !== undefined) {
               response.send("success", 200, getList);
             } else {
-              response.error("no list", 400, null);
+              next(new CustomErr("no list", 400));
             }
           } else {
-            response.error("invalid value", 400, null);
+            next(new CustomErr("invalid value", 400));
           }
         }
       }
@@ -90,14 +90,14 @@ exports.detail = async (req, res, next) => {
   try {
     let boardId = req.params.id.trim();
     if (boardId == undefined || boardId.length == 0) {
-      response.error("invalid value", 400, null);
+      next(new CustomErr("invalid value", 400));
     } else {
       const result = await boardService
         .detail(boardId)
         .then((res) => Object.values(JSON.parse(JSON.stringify(res))))
         .catch((err) => err);
       if (result.length === 0) {
-        response.error("board_id is not founded", 404, null);
+        next(new CustomErr("board_id is not founded", 404));
       } else {
         response.send("Success", 200, result);
       }
@@ -126,10 +126,10 @@ exports.write = async (req, res, next) => {
       if (result.length !== 0) {
         response.send("Success", 200, result);
       } else {
-        response.error("write failed", 404, null);
+        next(new CustomErr("failed", 404));
       }
     } else {
-      response.error("invalid value", 400, null);
+      next(new CustomErr("invalid value", 400));
     }
   } catch (err) {
     next(err);
@@ -146,7 +146,8 @@ exports.edit = async (req, res, next) => {
       board_id !== undefined &&
       title.length !== 0 &&
       content.length !== 0 &&
-      board_id.length !== 0
+      board_id.length !== 0 &&
+      board_id > 0
     ) {
       const boardIndex = Number(board_id);
       const result = await boardService
@@ -156,10 +157,10 @@ exports.edit = async (req, res, next) => {
       if (result !== 0) {
         response.send("edit complete", 200, null);
       } else {
-        response.error("edit failed", 404, null);
+        next(new CustomErr("edit failed", 400));
       }
     } else {
-      response.error("invalid value", 400, null);
+      next(new CustomErr("invalid value", 400));
     }
   } catch (err) {
     next(err);
@@ -171,7 +172,7 @@ exports.delete = async (req, res, next) => {
   try {
     let boardId = req.params.id.trim();
     if (boardId == undefined || boardId.length == 0) {
-      response.error("invalid value", 400, null);
+      next(new CustomErr("invalid value", 400));
     }
     const findId = await boardService
       .checkBoardId(boardId)
@@ -186,10 +187,10 @@ exports.delete = async (req, res, next) => {
       if (result.length !== 0) {
         response.send("Delete successful", 200, null);
       } else {
-        response.error("Delete failed", 404, null);
+        next(new CustomErr("Delete failed", 404));
       }
     } else {
-      response.error("there is no valid board id", 400, null);
+      next(new CustomErr("there is no valid board id", 400));
     }
   } catch (err) {
     next(err);
