@@ -7,18 +7,16 @@ exports.detail = async (req, res, next) => {
   try {
     let boardId = req.params.id.trim();
     if (boardId == undefined || boardId.length == 0) {
-      next(new CustomErr("invalid value", 400));
-    } else {
-      const result = await commentService
-        .findComment(boardId)
-        .then((res) => res)
-        .catch((err) => err);
-      if (result.length === 0) {
-        next(new CustomErr("there is no comment", 404));
-      } else {
-        response.send("Success", 200, result);
-      }
+      return next(new CustomErr("invalid value", 400));
     }
+    const result = await commentService
+      .findComment(boardId)
+      .then((res) => res)
+      .catch((err) => err);
+    if (result.length === 0) {
+      return next(new CustomErr("there is no comment", 404));
+    }
+    response.send("Success", 200, result);
   } catch (err) {
     next(err);
   }
@@ -41,13 +39,11 @@ exports.write = async (req, res, next) => {
         .then((res) => res)
         .catch((err) => err);
       if (result.length !== 0) {
-        response.send("Success", 200, null);
-      } else {
-        next(new CustomErr("failed", 404));
+        return response.send("Success", 200, null);
       }
-    } else {
-      next(new CustomErr("invalid value", 400));
+      return next(new CustomErr("failed", 404));
     }
+    next(new CustomErr("invalid value", 400));
   } catch (err) {
     next(err);
   }
@@ -69,16 +65,13 @@ exports.edit = async (req, res, next) => {
           .then((res) => res)
           .catch((err) => err);
         if (result.length !== 0) {
-          response.send("Success", 200, null);
-        } else {
-          next(new CustomErr("failed", 404));
+          return response.send("Success", 200, null);
         }
-      } else {
-        next(new CustomErr("no validate comment id", 404));
+        return next(new CustomErr("failed", 404));
       }
-    } else {
-      response(res, "invalid value", 400, null);
+      return next(new CustomErr("no validate comment id", 404));
     }
+    response(res, "invalid value", 400, null);
   } catch (err) {
     next(err);
   }
@@ -100,16 +93,13 @@ exports.delete = async (req, res, next) => {
           .then((res) => res)
           .catch((err) => err);
         if (result.length !== 0) {
-          response.send("Success", 200, null);
-        } else {
-          next(new CustomErr("failed", 404));
+          return response.send("Success", 200, null);
         }
-      } else {
-        next(new CustomErr("no validate comment id", 404));
+        return next(new CustomErr("failed", 404));
       }
-    } else {
-      response(res, "invalid value", 400, null);
+      return next(new CustomErr("no validate comment id", 404));
     }
+    response(res, "invalid value", 400, null);
   } catch (err) {
     next(err);
   }

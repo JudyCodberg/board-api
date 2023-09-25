@@ -9,18 +9,16 @@ exports.checkId = async (req, res, next) => {
   try {
     const userId = req.params.id.trim();
     if (userId.length == 0 || userId == undefined) {
-      next(new CustomErr("invalid parameter", 400));
-    } else {
-      const checkResult = await userService
-        .checkId(userId)
-        .then((res) => res)
-        .catch((err) => err);
-      if (checkResult.length !== 0) {
-        next(new CustomErr("Already Exist", 400));
-      } else {
-        response.send("Avaliable Id", 200, null);
-      }
+      return next(new CustomErr("invalid parameter", 400));
     }
+    const checkResult = await userService
+      .checkId(userId)
+      .then((res) => res)
+      .catch((err) => err);
+    if (checkResult.length !== 0) {
+      return next(new CustomErr("Already Exist", 400));
+    }
+    response.send("Avaliable Id", 200, null);
   } catch (err) {
     next(err);
   }
@@ -32,18 +30,16 @@ exports.checkName = async (req, res, next) => {
   try {
     const nickname = req.params.name.trim();
     if (nickname.length == 0 || nickname == undefined) {
-      next(new CustomErr("invalid parameter", 400));
-    } else {
-      const checkResult = await userService
-        .checkName(nickname)
-        .then((res) => res)
-        .catch((err) => err);
-      if (checkResult.length !== 0) {
-        next(new CustomErr("Already Exist", 400));
-      } else {
-        response.send("Avaliable Id", 200, null);
-      }
+      return next(new CustomErr("invalid parameter", 400));
     }
+    const checkResult = await userService
+      .checkName(nickname)
+      .then((res) => res)
+      .catch((err) => err);
+    if (checkResult.length !== 0) {
+      return next(new CustomErr("Already Exist", 400));
+    }
+    response.send("Avaliable nickname", 200, null);
   } catch (err) {
     next(err);
   }
@@ -52,33 +48,33 @@ exports.checkName = async (req, res, next) => {
 exports.join = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { id, nickname, password, answer } = req.body;
+    const { id, nickname, password, question, answer } = req.body;
     if (
-      id !== undefined &&
-      nickname !== undefined &&
-      password !== undefined &&
-      answer !== undefined &&
-      id.length !== 0 &&
-      nickname.length !== 0 &&
-      password.length !== 0 &&
-      answer.length !== 0
+      id === undefined ||
+      nickname === undefined ||
+      password === undefined ||
+      question === undefined ||
+      answer === undefined ||
+      id.length === 0 ||
+      nickname.length === 0 ||
+      password.length === 0 ||
+      question.length === 0 ||
+      answer.length === 0
     ) {
-      const hashPw = await userService
-        .hashPassword(password)
-        .then((res) => res)
-        .catch((err) => err);
-      const checkResult = await userService
-        .join(id, nickname, hashPw, answer)
-        .then((res) => res)
-        .catch((err) => err);
-      if (checkResult !== undefined) {
-        response.send("Join Success", 200, null);
-      } else {
-        next(new CustomErr("Join Failed", 404));
-      }
-    } else {
-      next(new CustomErr("invalid value", 400));
+      return next(new CustomErr("invalid value", 400));
     }
+    const hashPw = await userService
+      .hashPassword(password)
+      .then((res) => res)
+      .catch((err) => err);
+    const checkResult = await userService
+      .join(id, nickname, hashPw, question, answer)
+      .then((res) => res)
+      .catch((err) => err);
+    if (checkResult !== undefined) {
+      return response.send("Join Success", 200, null);
+    }
+    next(new CustomErr("Join Failed", 404));
   } catch (err) {
     next(err);
   }
@@ -89,27 +85,24 @@ exports.login = async (req, res, next) => {
   try {
     const { id, password } = req.body;
     if (id == undefined || password == undefined || id.length == 0 || password.length == 0) {
-      next(new CustomErr("Parameter is not avaliable", 400));
-    } else {
-      const result = await userService
-        .login(id)
-        .then((res) => res)
-        .catch((err) => err);
-      if (result.length == 0) {
-        next(new CustomErr("user info does not exist", 404));
-      } else {
-        const hashedpw = Object.values(JSON.parse(JSON.stringify(result)))[0].password;
-        const syncPw = await userService
-          .checkpw(password, hashedpw)
-          .then((res) => res)
-          .catch((err) => err);
-        if (syncPw) {
-          response.send("Login Success", 200, null);
-        } else {
-          next(new CustomErr("password not matched", 400));
-        }
-      }
+      return next(new CustomErr("Parameter is not avaliable", 400));
     }
+    const result = await userService
+      .login(id)
+      .then((res) => res)
+      .catch((err) => err);
+    if (result.length == 0) {
+      return next(new CustomErr("user info does not exist", 404));
+    }
+    const hashedpw = Object.values(JSON.parse(JSON.stringify(result)))[0].password;
+    const syncPw = await userService
+      .checkpw(password, hashedpw)
+      .then((res) => res)
+      .catch((err) => err);
+    if (syncPw) {
+      return response.send("Login Success", 200, null);
+    }
+    next(new CustomErr("password not matched", 400));
   } catch (err) {
     next(err);
   }
@@ -121,18 +114,20 @@ exports.checkAnswer = async (req, res, next) => {
   try {
     const { answer } = req.body;
     if (answer == undefined || answer.length == 0) {
-      next(new CustomErr("invalid value", 400));
-    } else {
-      const result = await userService
-        .findAnswer(answer)
-        .then((res) => res)
-        .catch((err) => err);
-      if (result.length == 0) {
-        next(new CustomErr("no result", 404));
-      } else {
-        response.send("Password founded", 200, result);
-      }
+      return next(new CustomErr("invalid value", 400));
     }
+    const result = await userService
+      .findAnswer(answer)
+      .then((res) => res)
+      .catch((err) => err);
+    if (result.length == 0) {
+      return next(new CustomErr("no result", 404));
+    }
+    const userToken = await userService
+      .getToken()
+      .then((res) => res)
+      .catch((err) => err);
+    response.send("Password founded", 200, userToken);
   } catch (err) {
     next(err);
   }
@@ -142,29 +137,37 @@ exports.checkAnswer = async (req, res, next) => {
 exports.newPassword = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { new_password, account } = req.body;
-    const hashPw = await bcrypt.hash(new_password, 10);
-    if (hashPw == undefined || hashPw.length == 0 || account == undefined || account.length == 0) {
-      next(new CustomErr("invalid value", 400));
-    } else {
+    const { userToken, password, account } = req.body;
+    if (password == undefined || password.length == 0 || account == undefined || account.length == 0) {
+      return next(new CustomErr("invalid value", 400));
+    }
+    // 토큰 검증
+    const verifyToken = await userService
+      .checkToken(userToken)
+      .then((res) => res)
+      .catch((err) => err);
+    if (verifyToken) {
+      const hashPw = await userService
+        .hashPassword(password)
+        .then((res) => res)
+        .catch((err) => err);
       const checkResult = await userService
         .checkId(account)
         .then((res) => res)
         .catch((err) => err);
-      if (checkResult.length !== 0) {
-        const result = await userService
-          .findPassword(hashPw, account)
-          .then((res) => res)
-          .catch((err) => err);
-        if (result.length == 0) {
-          next(new CustomErr("no result", 404));
-        } else {
-          response.send("New Password is confirmed", 200, result);
-        }
-      } else {
-        next(new CustomErr("no validate account", 400));
+      if (checkResult.length == 0) {
+        return next(new CustomErr("no validate account", 400));
       }
+      const result = await userService
+        .findPassword(hashPw, account)
+        .then((res) => res)
+        .catch((err) => err);
+      if (result.length == 0) {
+        return next(new CustomErr("no result", 404));
+      }
+      return response.send("New Password is confirmed", 200, null);
     }
+    return next(new CustomErr("token expired", 400));
   } catch (err) {
     next(err);
   }

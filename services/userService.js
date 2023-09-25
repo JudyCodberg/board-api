@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const connection = require("../config/config");
 
 const query = (sql, values) => {
@@ -29,9 +30,10 @@ exports.hashPassword = (password) => {
     resolve(bcrypt.hash(password, 10));
   });
 };
-exports.join = (id, nickname, hashPw, answer) => {
-  const sql = `INSERT INTO user (account, nickname, password, createdAt, updatedAt, pw_answer) VALUES (?,?,?,?,?,?);`;
-  const values = [id, nickname, hashPw, new Date(), new Date(), answer];
+
+exports.join = (id, nickname, hashPw, question, answer) => {
+  const sql = `INSERT INTO user (account, nickname, password, pw_question, pw_answer, createdAt, updatedAt) VALUES (?,?,?,?,?,?,?);`;
+  const values = [id, nickname, hashPw, question, answer, new Date(), new Date()];
   return query(sql, values);
 };
 
@@ -48,6 +50,28 @@ exports.checkpw = (password, hashedpw) => {
         reject(err);
       }
       resolve(result);
+    });
+  });
+};
+
+exports.getToken = () => {
+  return new Promise(function (resolve, reject) {
+    jwt.sign({ type: jwt }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(token);
+    });
+  });
+};
+
+exports.checkToken = (userToken) => {
+  return new Promise(function (resolve, reject) {
+    jwt.verify(userToken, process.env.SECRET_KEY, (err, decoded) => {
+      if (err) {
+        return reject(false);
+      }
+      resolve(true);
     });
   });
 };
