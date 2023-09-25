@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 
-const { UserRouter, BoardRouter } = require("./routes/index.js");
+const { UserRouter, BoardRouter, CommentRouter } = require("./routes/index.js");
 const handleError = require("./handleErr.js");
 
 app.use(express.json());
@@ -9,6 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/user", UserRouter);
 app.use("/board", BoardRouter);
+app.use("/comment", CommentRouter);
 
 app.use(handleError.handleError);
 

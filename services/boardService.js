@@ -1,8 +1,6 @@
 const connection = require("../config/config");
 
 const query = (sql, values) => {
-  // console.log("sql", sql);
-  // console.log("values", values);
   return new Promise(function (resolve, reject) {
     connection.query(sql, values, (error, result) => {
       if (error) {
@@ -19,7 +17,6 @@ exports.boardCountAll = () => {
     connection.query(sql, (error, result) => {
       if (error) {
         reject(error);
-        console.error(error);
       }
       resolve(Object.values(JSON.parse(JSON.stringify(result)))[0].count);
     });

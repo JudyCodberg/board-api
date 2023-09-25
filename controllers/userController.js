@@ -1,7 +1,9 @@
 const userService = require("../services/userService");
 const Response = require("../response.js");
 const CustomErr = require("../customErr");
+const bcrypt = require("bcrypt");
 
+// 아이디 중복체크
 exports.checkId = async (req, res, next) => {
   const response = new Response(res);
   try {
@@ -24,6 +26,7 @@ exports.checkId = async (req, res, next) => {
   }
 };
 
+// 닉네임 중복체크
 exports.checkName = async (req, res, next) => {
   const response = new Response(res);
   try {
@@ -49,17 +52,23 @@ exports.checkName = async (req, res, next) => {
 exports.join = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { id, nickname, password } = req.body;
+    const { id, nickname, password, answer } = req.body;
     if (
       id !== undefined &&
       nickname !== undefined &&
       password !== undefined &&
+      answer !== undefined &&
       id.length !== 0 &&
       nickname.length !== 0 &&
-      password.length !== 0
+      password.length !== 0 &&
+      answer.length !== 0
     ) {
+      const hashPw = await userService
+        .hashPassword(password)
+        .then((res) => res)
+        .catch((err) => err);
       const checkResult = await userService
-        .join(id, nickname, password)
+        .join(id, nickname, hashPw, answer)
         .then((res) => res)
         .catch((err) => err);
       if (checkResult !== undefined) {
@@ -83,13 +92,22 @@ exports.login = async (req, res, next) => {
       next(new CustomErr("Parameter is not avaliable", 400));
     } else {
       const result = await userService
-        .login(id, password)
+        .login(id)
         .then((res) => res)
         .catch((err) => err);
       if (result.length == 0) {
         next(new CustomErr("user info does not exist", 404));
       } else {
-        response.send("Login Success", 200, null);
+        const hashedpw = Object.values(JSON.parse(JSON.stringify(result)))[0].password;
+        const syncPw = await userService
+          .checkpw(password, hashedpw)
+          .then((res) => res)
+          .catch((err) => err);
+        if (syncPw) {
+          response.send("Login Success", 200, null);
+        } else {
+          next(new CustomErr("password not matched", 400));
+        }
       }
     }
   } catch (err) {
@@ -97,18 +115,54 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.findpassword = async (req, res, next) => {
+// 비밀번호 답변 체크
+exports.checkAnswer = async (req, res, next) => {
   const response = new Response(res);
   try {
-    let userId = req.params.id.trim();
-    if (userId == undefined || userId.length == 0) {
+    const { answer } = req.body;
+    if (answer == undefined || answer.length == 0) {
       next(new CustomErr("invalid value", 400));
     } else {
-      const result = await userService.findpassword(userId);
-      if (Object.values(JSON.parse(JSON.stringify(result)))[0] == undefined) {
+      const result = await userService
+        .findAnswer(answer)
+        .then((res) => res)
+        .catch((err) => err);
+      if (result.length == 0) {
         next(new CustomErr("no result", 404));
       } else {
-        response.send("Password founded", 200, Object.values(JSON.parse(JSON.stringify(result)))[0].password);
+        response.send("Password founded", 200, result);
+      }
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 비밀번호 재설정
+exports.newPassword = async (req, res, next) => {
+  const response = new Response(res);
+  try {
+    const { new_password, account } = req.body;
+    const hashPw = await bcrypt.hash(new_password, 10);
+    if (hashPw == undefined || hashPw.length == 0 || account == undefined || account.length == 0) {
+      next(new CustomErr("invalid value", 400));
+    } else {
+      const checkResult = await userService
+        .checkId(account)
+        .then((res) => res)
+        .catch((err) => err);
+      if (checkResult.length !== 0) {
+        const result = await userService
+          .findPassword(hashPw, account)
+          .then((res) => res)
+          .catch((err) => err);
+        if (result.length == 0) {
+          next(new CustomErr("no result", 404));
+        } else {
+          response.send("New Password is confirmed", 200, result);
+        }
+      } else {
+        next(new CustomErr("no validate account", 400));
       }
     }
   } catch (err) {
