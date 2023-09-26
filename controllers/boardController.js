@@ -17,47 +17,45 @@ exports.list = async (req, res, next) => {
       return next(new CustomErr("there is no data", 400));
     }
     if (target !== undefined && value !== undefined) {
-      if (target == 0) {
-        const countNum = await boardService
-          .countSearchTitle(value)
-          .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
-          .catch((err) => err);
-        if (countNum == 0) {
-          return next(new CustomErr("there is no data", 400));
-        }
-        const searchTitleData = await boardService
-          .searchTitle(pageSize, pageNum, value)
-          .then((res) => res)
-          .catch((err) => err);
-        return response.send("Success", 200, { searchTitleData, countNum });
-      } else if (target == 1) {
-        const countNum = await boardService
-          .countSearchContent(value)
-          .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
-          .catch((err) => err);
-        if (countNum == 0) {
-          return next(new CustomErr("there is no data", 400));
-        }
-        const searchContentData = await boardService
-          .searchContent(pageSize, pageNum, value)
-          .then((res) => res)
-          .catch((err) => err);
-        return response.send("Success", 200, { searchContentData, countNum });
-      } else if (target == 2) {
-        const countNum = await boardService
-          .countSearchAll(value)
-          .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
-          .catch((err) => err);
-        if (countNum == 0) {
-          return next(new CustomErr("there is no data", 400));
-        }
-        const searchAllData = await boardService
-          .searchAll(pageSize, pageNum, value)
-          .then((res) => res)
-          .catch((err) => err);
-        return response.send("Success", 200, { searchAllData, countNum });
+      let countNum, searchData;
+      switch (target) {
+        case 0:
+          countNum = await boardService
+            .countSearchTitle(value)
+            .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
+            .catch((err) => err);
+          searchData = await boardService
+            .searchTitle(pageSize, pageNum, value)
+            .then((res) => res)
+            .catch((err) => err);
+          break;
+        case 1:
+          countNum = await boardService
+            .countSearchContent(value)
+            .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
+            .catch((err) => err);
+          searchData = await boardService
+            .searchContent(pageSize, pageNum, value)
+            .then((res) => res)
+            .catch((err) => err);
+          break;
+        case 2:
+          countNum = await boardService
+            .countSearchAll(value)
+            .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
+            .catch((err) => err);
+          searchData = await boardService
+            .searchAll(pageSize, pageNum, value)
+            .then((res) => res)
+            .catch((err) => err);
+          break;
+        default:
+          return next(new CustomErr("invalid target value", 400));
       }
-      return next(new CustomErr("no search value", 400));
+      if (countNum === 0) {
+        return next(new CustomErr("there is no data", 400));
+      }
+      return response.send("Success", 200, { searchData, countNum });
     }
     if (Math.ceil(boardCountAll / pageSize) >= pageNum) {
       const getList = await boardService
@@ -69,7 +67,7 @@ exports.list = async (req, res, next) => {
       }
       return next(new CustomErr("no list", 400));
     }
-    next(new CustomErr("invalid value", 400));
+    return next(new CustomErr("invalid value", 400));
   } catch (err) {
     next(err);
   }
@@ -89,7 +87,7 @@ exports.detail = async (req, res, next) => {
     if (result.length === 0) {
       return next(new CustomErr("board_id is not founded", 404));
     }
-    response.send("Success", 200, result);
+    return response.send("Success", 200, result);
   } catch (err) {
     next(err);
   }
@@ -116,7 +114,7 @@ exports.write = async (req, res, next) => {
       }
       return next(new CustomErr("failed", 404));
     }
-    next(new CustomErr("invalid value", 400));
+    return next(new CustomErr("invalid value", 400));
   } catch (err) {
     next(err);
   }
@@ -145,7 +143,7 @@ exports.edit = async (req, res, next) => {
       }
       return next(new CustomErr("edit failed", 400));
     }
-    next(new CustomErr("invalid value", 400));
+    return next(new CustomErr("invalid value", 400));
   } catch (err) {
     next(err);
   }
@@ -173,7 +171,7 @@ exports.delete = async (req, res, next) => {
       }
       return next(new CustomErr("Delete failed", 404));
     }
-    next(new CustomErr("there is no valid board id", 400));
+    return next(new CustomErr("there is no valid board id", 400));
   } catch (err) {
     next(err);
   }

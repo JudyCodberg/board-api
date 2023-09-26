@@ -22,20 +22,20 @@ exports.writeComment = (board_id, comment_content, nickname) => {
   return query(sql, values);
 };
 
-exports.checkCommentId = (commentIdx) => {
-  const sql = `SELECT * FROM comment WHERE comment_id = ?`;
-  const values = commentIdx;
-  return query(sql, values);
-};
-
 exports.editComment = (comment_content, nickname, commentIdx) => {
   const sql = `UPDATE comment SET comment_content = ?, updatedAt = ? WHERE comment_id = ? AND nickname = ?;`;
   const values = [comment_content, new Date(), commentIdx, nickname];
   return query(sql, values);
 };
 
-exports.deleteComment = (commentIdx) => {
-  const sql = `DELETE FROM comment WHERE comment_id = ?;`;
+exports.checkCommentId = (commentIdx) => {
+  const sql = `SELECT * FROM comment WHERE comment_id = ?`;
+  const values = commentIdx;
+  return query(sql, values);
+};
+
+exports.updateDelete = (commentIdx) => {
+  const sql = `UPDATE comment SET is_delete = 0 WHERE comment_id =?;`;
   const values = commentIdx;
   return query(sql, values);
 };

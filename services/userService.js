@@ -54,9 +54,9 @@ exports.checkpw = (password, hashedpw) => {
   });
 };
 
-exports.getToken = () => {
+exports.getToken = (nickname) => {
   return new Promise(function (resolve, reject) {
-    jwt.sign({ type: jwt }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
+    jwt.sign({ username: `${nickname}` }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
       if (err) {
         reject(err);
       }
@@ -65,13 +65,16 @@ exports.getToken = () => {
   });
 };
 
-exports.checkToken = (userToken) => {
+exports.checkToken = (userToken, nickname) => {
   return new Promise(function (resolve, reject) {
     jwt.verify(userToken, process.env.SECRET_KEY, (err, decoded) => {
       if (err) {
         return reject(false);
       }
-      resolve(true);
+      if (decoded.username === nickname) {
+        return resolve(true);
+      }
+      reject(false);
     });
   });
 };

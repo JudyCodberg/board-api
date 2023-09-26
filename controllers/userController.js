@@ -18,7 +18,7 @@ exports.checkId = async (req, res, next) => {
     if (checkResult.length !== 0) {
       return next(new CustomErr("Already Exist", 400));
     }
-    response.send("Avaliable Id", 200, null);
+    return response.send("Avaliable Id", 200, null);
   } catch (err) {
     next(err);
   }
@@ -39,7 +39,7 @@ exports.checkName = async (req, res, next) => {
     if (checkResult.length !== 0) {
       return next(new CustomErr("Already Exist", 400));
     }
-    response.send("Avaliable nickname", 200, null);
+    return response.send("Avaliable nickname", 200, null);
   } catch (err) {
     next(err);
   }
@@ -74,7 +74,7 @@ exports.join = async (req, res, next) => {
     if (checkResult !== undefined) {
       return response.send("Join Success", 200, null);
     }
-    next(new CustomErr("Join Failed", 404));
+    return next(new CustomErr("Join Failed", 404));
   } catch (err) {
     next(err);
   }
@@ -102,7 +102,7 @@ exports.login = async (req, res, next) => {
     if (syncPw) {
       return response.send("Login Success", 200, null);
     }
-    next(new CustomErr("password not matched", 400));
+    return next(new CustomErr("password not matched", 400));
   } catch (err) {
     next(err);
   }
@@ -112,22 +112,22 @@ exports.login = async (req, res, next) => {
 exports.checkAnswer = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { answer } = req.body;
+    const { answer, nickname } = req.body;
     if (answer == undefined || answer.length == 0) {
       return next(new CustomErr("invalid value", 400));
     }
     const result = await userService
-      .findAnswer(answer)
+      .findAnswer(answer, nickname)
       .then((res) => res)
       .catch((err) => err);
     if (result.length == 0) {
       return next(new CustomErr("no result", 404));
     }
     const userToken = await userService
-      .getToken()
+      .getToken(nickname)
       .then((res) => res)
       .catch((err) => err);
-    response.send("Password founded", 200, userToken);
+    return response.send("user get token", 200, userToken);
   } catch (err) {
     next(err);
   }
@@ -137,13 +137,13 @@ exports.checkAnswer = async (req, res, next) => {
 exports.newPassword = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { userToken, password, account } = req.body;
+    const { userToken, password, account, nickname } = req.body;
     if (password == undefined || password.length == 0 || account == undefined || account.length == 0) {
       return next(new CustomErr("invalid value", 400));
     }
     // 토큰 검증
     const verifyToken = await userService
-      .checkToken(userToken)
+      .checkToken(userToken, nickname)
       .then((res) => res)
       .catch((err) => err);
     if (verifyToken) {
@@ -167,7 +167,7 @@ exports.newPassword = async (req, res, next) => {
       }
       return response.send("New Password is confirmed", 200, null);
     }
-    return next(new CustomErr("token expired", 400));
+    return next(new CustomErr("token is not validate", 400));
   } catch (err) {
     next(err);
   }
