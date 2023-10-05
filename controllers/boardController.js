@@ -63,7 +63,7 @@ exports.list = async (req, res, next) => {
         .then((res) => res)
         .catch((err) => err);
       if (getList.length !== 0 && getList !== undefined) {
-        return response.send("success", 200, getList);
+        return response.send("success", 200, { getList, boardCountAll });
       }
       return next(new CustomErr("no list", 400));
     }

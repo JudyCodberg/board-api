@@ -60,8 +60,8 @@ exports.searchAll = (pageSize, pageNum, value) => {
 };
 
 exports.getList = (pageSize, pageNum) => {
-  const sql = `SELECT * from board LIMIT ?, ?;`;
-  const values = [(pageNum - 1) * pageSize, pageSize];
+  const sql = `SELECT * from board WHERE is_delete = ? LIMIT ?, ?;`;
+  const values = [1, (pageNum - 1) * pageSize, pageSize];
   return query(sql, values);
 };
 

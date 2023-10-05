@@ -100,7 +100,7 @@ exports.login = async (req, res, next) => {
       .then((res) => res)
       .catch((err) => err);
     if (syncPw) {
-      return response.send("Login Success", 200, null);
+      return response.send("Login Success", 200, result);
     }
     return next(new CustomErr("password not matched", 400));
   } catch (err) {
@@ -112,19 +112,19 @@ exports.login = async (req, res, next) => {
 exports.checkAnswer = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { answer, nickname } = req.body;
-    if (answer == undefined || answer.length == 0) {
+    const { question, answer, account } = req.body;
+    if (answer === undefined || answer.length == 0 || question === undefined || account === undefined) {
       return next(new CustomErr("invalid value", 400));
     }
     const result = await userService
-      .findAnswer(answer, nickname)
+      .findAnswer(question, answer, account)
       .then((res) => res)
       .catch((err) => err);
     if (result.length == 0) {
       return next(new CustomErr("no result", 404));
     }
     const userToken = await userService
-      .getToken(nickname)
+      .getToken(account)
       .then((res) => res)
       .catch((err) => err);
     return response.send("user get token", 200, userToken);
@@ -137,13 +137,13 @@ exports.checkAnswer = async (req, res, next) => {
 exports.newPassword = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { userToken, password, account, nickname } = req.body;
+    const { userToken, password, account } = req.body;
     if (password == undefined || password.length == 0 || account == undefined || account.length == 0) {
       return next(new CustomErr("invalid value", 400));
     }
     // 토큰 검증
     const verifyToken = await userService
-      .checkToken(userToken, nickname)
+      .checkToken(userToken, account)
       .then((res) => res)
       .catch((err) => err);
     if (verifyToken) {

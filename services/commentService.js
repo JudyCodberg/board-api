@@ -11,8 +11,8 @@ const query = (sql, values) => {
 };
 
 exports.findComment = (boardId) => {
-  const sql = `SELECT * FROM board LEFT JOIN comment ON board.board_id = comment.board_id WHERE board.board_id = ?;`;
-  const values = boardId;
+  const sql = `SELECT * FROM comment LEFT JOIN board ON board.board_id = comment.board_id WHERE board.board_id = ? AND comment.is_delete = ?;`;
+  const values = [boardId, 1];
   return query(sql, values);
 };
 

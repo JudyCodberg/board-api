@@ -54,24 +54,24 @@ exports.checkpw = (password, hashedpw) => {
   });
 };
 
-exports.getToken = (nickname) => {
+exports.getToken = (account) => {
   return new Promise(function (resolve, reject) {
-    jwt.sign({ username: `${nickname}` }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
+    jwt.sign({ username: `${account}` }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
       if (err) {
         reject(err);
       }
-      resolve(token);
+      resolve({ token, account });
     });
   });
 };
 
-exports.checkToken = (userToken, nickname) => {
+exports.checkToken = (userToken, account) => {
   return new Promise(function (resolve, reject) {
     jwt.verify(userToken, process.env.SECRET_KEY, (err, decoded) => {
       if (err) {
         return reject(false);
       }
-      if (decoded.username === nickname) {
+      if (decoded.username === account) {
         return resolve(true);
       }
       reject(false);
@@ -79,9 +79,9 @@ exports.checkToken = (userToken, nickname) => {
   });
 };
 
-exports.findAnswer = (answer) => {
-  const sql = `SELECT * FROM user WHERE pw_answer = ?;`;
-  const values = answer;
+exports.findAnswer = (question, answer, account) => {
+  const sql = `SELECT * FROM user WHERE pw_question = ? AND pw_answer = ? AND account = ? ;`;
+  const values = [question, answer, account];
   return query(sql, values);
 };
 
