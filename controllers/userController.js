@@ -100,12 +100,12 @@ exports.login = async (req, res, next) => {
       .then((res) => res)
       .catch((err) => err);
     if (syncPw) {
-      // const loginToken = await userService
-      //   .loginToken(id)
-      //   .then((res) => res)
-      //   .catch((err) => err);
-      // return response.send("Login Success", 200, { result, loginToken });
-      return response.send("Login Success", 200, result);
+      const loginToken = await userService
+        .loginToken(id)
+        .then((res) => res)
+        .catch((err) => err);
+      const username = result[0].nickname;
+      return response.send("Login Success", 200, { username, loginToken });
     }
     return next(new CustomErr("password not matched", 400));
   } catch (err) {

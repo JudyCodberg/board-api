@@ -56,7 +56,7 @@ exports.checkpw = (password, hashedpw) => {
 
 exports.loginToken = (id) => {
   return new Promise(function (resolve, reject) {
-    jwt.sign({ username: `${id}` }, process.env.SECRET_KEY, { expiresIn: "1m" }, (err, token) => {
+    jwt.sign({ username: `${id}` }, process.env.SECRET_KEY, { expiresIn: "3h" }, (err, token) => {
       if (err) {
         reject(err);
       }

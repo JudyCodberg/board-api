@@ -4,11 +4,13 @@ const cors = require("cors");
 
 const { UserRouter, BoardRouter, CommentRouter } = require("./routes/index.js");
 const handleError = require("./handleErr.js");
+const { verifyToken } = require("./verifyToken.js");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: "http://localhost:3000" }));
 
+app.use(verifyToken);
 app.use("/user", UserRouter);
 app.use("/board", BoardRouter);
 app.use("/comment", CommentRouter);
