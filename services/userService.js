@@ -54,6 +54,17 @@ exports.checkpw = (password, hashedpw) => {
   });
 };
 
+exports.loginToken = (id) => {
+  return new Promise(function (resolve, reject) {
+    jwt.sign({ username: `${id}` }, process.env.SECRET_KEY, { expiresIn: "1m" }, (err, token) => {
+      if (err) {
+        reject(err);
+      }
+      resolve({ token, id });
+    });
+  });
+};
+
 exports.getToken = (account) => {
   return new Promise(function (resolve, reject) {
     jwt.sign({ username: `${account}` }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {

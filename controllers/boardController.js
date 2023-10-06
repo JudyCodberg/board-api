@@ -63,6 +63,18 @@ exports.list = async (req, res, next) => {
         .then((res) => res)
         .catch((err) => err);
       if (getList.length !== 0 && getList !== undefined) {
+        const lists = Object.values(JSON.parse(JSON.stringify(getList)));
+        for (let i = 0; i < lists.length; i++) {
+          const boardId = lists[i].board_id;
+          const countComment = await boardService
+            .countComment(boardId)
+            .then((res) => res)
+            .catch((err) => err);
+          const update = await boardService
+            .updateComment(countComment, boardId)
+            .then((res) => res)
+            .catch((err) => err);
+        }
         return response.send("success", 200, { getList, boardCountAll });
       }
       return next(new CustomErr("no list", 400));
@@ -87,6 +99,11 @@ exports.detail = async (req, res, next) => {
     if (result.length === 0) {
       return next(new CustomErr("board_id is not founded", 404));
     }
+    const number = result[0].hits;
+    const hits = await boardService
+      .addhitsNum(number, boardId)
+      .then((res) => res)
+      .catch((err) => err);
     return response.send("Success", 200, result);
   } catch (err) {
     next(err);
