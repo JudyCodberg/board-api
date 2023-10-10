@@ -3,16 +3,17 @@ const jwt = require("jsonwebtoken");
 
 exports.verifyToken = (req, res, next) => {
   const response = new Response(res);
-  const userToken = req.header.token;
+  if (req.path.indexOf("/user/") === 0) {
+    return next();
+  }
+  const userToken = req.headers.authorization;
   jwt.verify(userToken, process.env.SECRET_KEY, (err, decoded) => {
-    if (err) {
-      response.error(err.message, err.expiredAt);
-      return reject(false);
+    if (decoded) {
+      return next();
     }
-    if (decoded.username) {
-      response.send("verify success", 200);
-      return resolve(true);
+    console.log(err);
+    if (err.message == "jwt expired") {
+      return response.error(err.message, 410, null);
     }
-    reject(false);
   });
 };
