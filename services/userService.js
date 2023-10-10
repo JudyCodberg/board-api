@@ -45,6 +45,7 @@ exports.login = (id) => {
 
 exports.checkpw = (password, hashedpw) => {
   return new Promise(function (resolve, reject) {
+    // 해싱한 값끼리 비교 -> 해싱한 값들이 일치하는지?
     bcrypt.compare(password, hashedpw, (err, result) => {
       if (err) {
         reject(err);
@@ -91,12 +92,13 @@ exports.checkToken = (userToken, account) => {
 };
 
 exports.findAnswer = (question, answer, account) => {
-  const sql = `SELECT * FROM user WHERE pw_question = ? AND pw_answer = ? AND account = ? ;`;
+  const sql = `SELECT * FROM user WHERE pw_question = 0 AND pw_answer = ? AND account = ? ;`;
   const values = [question, answer, account];
   return query(sql, values);
 };
 
-exports.findPassword = (hashPw, account) => {
+// 이름바꾸기
+exports.updatePassword = (hashPw, account) => {
   const sql = `UPDATE user SET password = ? WHERE account = ? ;`;
   const values = [hashPw, account];
   return query(sql, values);

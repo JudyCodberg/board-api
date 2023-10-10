@@ -13,13 +13,18 @@ exports.list = async (req, res, next) => {
       return next(new CustomErr("invalid parameter", 400));
     }
     const boardCountAll = await boardService.boardCountAll();
-    if (boardCountAll - 1 < pageSize) {
+    if (boardCountAll < 1) {
       return next(new CustomErr("there is no data", 400));
     }
     if (target !== undefined && value !== undefined) {
       let countNum, searchData;
+      // target : 검색할 대상/ value : 검색할 내용
+      // 0: 제목
+      // 1: 내용
+      // 2: 제목+내용
       switch (target) {
         case 0:
+          // TODO then res=> res 굳이 안써도 됨-> 수정
           countNum = await boardService
             .countSearchTitle(value)
             .then((res) => Object.values(JSON.parse(JSON.stringify(res)))[0].count)
@@ -57,13 +62,14 @@ exports.list = async (req, res, next) => {
       }
       return response.send("Success", 200, { searchData, countNum });
     }
-    if (Math.ceil(boardCountAll / pageSize) >= pageNum) {
+    if (Math.ceil(boardCountAll / pageSize) >= 1) {
       const getList = await boardService
         .getList(pageSize, pageNum)
         .then((res) => res)
         .catch((err) => err);
       if (getList.length !== 0 && getList !== undefined) {
         const lists = Object.values(JSON.parse(JSON.stringify(getList)));
+        // TODO 댓글 수 세는 로직은 글 가져올때 가져오도록 수정, 이중쿼리X
         for (let i = 0; i < lists.length; i++) {
           const boardId = lists[i].board_id;
           const countComment = await boardService

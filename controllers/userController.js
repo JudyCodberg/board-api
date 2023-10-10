@@ -7,10 +7,16 @@ const bcrypt = require("bcrypt");
 exports.checkId = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const userId = req.params.id.trim();
+    // trim() 같은 함수는 최대한 변수안에 쓰지 않도록 주의
+    // 예외처리 하는 로직안에서 처리하는 것이 좋음, 다른 곳도 마찬가지**
+    const userId = req.params?.id;
     if (userId.length == 0 || userId == undefined) {
       return next(new CustomErr("invalid parameter", 400));
     }
+    // const userId = req.params.id?.trim();
+    // if (userId.length == 0 || userId == undefined) {
+    //   return next(new CustomErr("invalid parameter", 400));
+    // }
     const checkResult = await userService
       .checkId(userId)
       .then((res) => res)
@@ -122,7 +128,7 @@ exports.checkAnswer = async (req, res, next) => {
       return next(new CustomErr("invalid value", 400));
     }
     const result = await userService
-      .findAnswer(question, answer, account)
+      .findAnswer(String(question), answer, account)
       .then((res) => res)
       .catch((err) => err);
     if (result.length == 0) {
@@ -164,7 +170,7 @@ exports.newPassword = async (req, res, next) => {
         return next(new CustomErr("no validate account", 400));
       }
       const result = await userService
-        .findPassword(hashPw, account)
+        .updatePassword(hashPw, account)
         .then((res) => res)
         .catch((err) => err);
       if (result.length == 0) {

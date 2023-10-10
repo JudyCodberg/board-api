@@ -7,6 +7,7 @@ const handleError = require("./handleErr.js");
 const { verifyToken } = require("./verifyToken.js");
 
 app.use(express.json());
+// TODO 정확히 어떤 역할을 하는 미들웨어?
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: "http://localhost:3000" }));
 

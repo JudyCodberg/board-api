@@ -11,7 +11,6 @@ exports.verifyToken = (req, res, next) => {
     if (decoded) {
       return next();
     }
-    console.log(err);
     if (err.message == "jwt expired") {
       return response.error(err.message, 410, null);
     }
