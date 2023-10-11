@@ -45,6 +45,7 @@ exports.login = (id) => {
 
 exports.checkpw = (password, hashedpw) => {
   return new Promise(function (resolve, reject) {
+    // 해싱한 값끼리 비교 -> 해싱한 값들이 일치하는지?
     bcrypt.compare(password, hashedpw, (err, result) => {
       if (err) {
         reject(err);
@@ -54,24 +55,35 @@ exports.checkpw = (password, hashedpw) => {
   });
 };
 
-exports.getToken = (nickname) => {
+exports.loginToken = (id) => {
   return new Promise(function (resolve, reject) {
-    jwt.sign({ username: `${nickname}` }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
+    jwt.sign({ username: `${id}` }, process.env.SECRET_KEY, { expiresIn: "3h" }, (err, token) => {
       if (err) {
         reject(err);
       }
-      resolve(token);
+      resolve({ token, id });
     });
   });
 };
 
-exports.checkToken = (userToken, nickname) => {
+exports.getToken = (account) => {
+  return new Promise(function (resolve, reject) {
+    jwt.sign({ username: `${account}` }, process.env.SECRET_KEY, { expiresIn: "3m" }, (err, token) => {
+      if (err) {
+        reject(err);
+      }
+      resolve({ token, account });
+    });
+  });
+};
+
+exports.checkToken = (userToken, account) => {
   return new Promise(function (resolve, reject) {
     jwt.verify(userToken, process.env.SECRET_KEY, (err, decoded) => {
       if (err) {
         return reject(false);
       }
-      if (decoded.username === nickname) {
+      if (decoded.username === account) {
         return resolve(true);
       }
       reject(false);
@@ -79,13 +91,14 @@ exports.checkToken = (userToken, nickname) => {
   });
 };
 
-exports.findAnswer = (answer) => {
-  const sql = `SELECT * FROM user WHERE pw_answer = ?;`;
-  const values = answer;
+exports.findAnswer = (question, answer, account) => {
+  const sql = `SELECT * FROM user WHERE pw_question = 0 AND pw_answer = ? AND account = ? ;`;
+  const values = [question, answer, account];
   return query(sql, values);
 };
 
-exports.findPassword = (hashPw, account) => {
+// 이름바꾸기
+exports.updatePassword = (hashPw, account) => {
   const sql = `UPDATE user SET password = ? WHERE account = ? ;`;
   const values = [hashPw, account];
   return query(sql, values);

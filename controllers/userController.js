@@ -7,10 +7,16 @@ const bcrypt = require("bcrypt");
 exports.checkId = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const userId = req.params.id.trim();
+    // trim() 같은 함수는 최대한 변수안에 쓰지 않도록 주의
+    // 예외처리 하는 로직안에서 처리하는 것이 좋음, 다른 곳도 마찬가지**
+    const userId = req.params?.id;
     if (userId.length == 0 || userId == undefined) {
       return next(new CustomErr("invalid parameter", 400));
     }
+    // const userId = req.params.id?.trim();
+    // if (userId.length == 0 || userId == undefined) {
+    //   return next(new CustomErr("invalid parameter", 400));
+    // }
     const checkResult = await userService
       .checkId(userId)
       .then((res) => res)
@@ -100,7 +106,12 @@ exports.login = async (req, res, next) => {
       .then((res) => res)
       .catch((err) => err);
     if (syncPw) {
-      return response.send("Login Success", 200, null);
+      const loginToken = await userService
+        .loginToken(id)
+        .then((res) => res)
+        .catch((err) => err);
+      const username = result[0].nickname;
+      return response.send("Login Success", 200, { username, loginToken });
     }
     return next(new CustomErr("password not matched", 400));
   } catch (err) {
@@ -112,19 +123,19 @@ exports.login = async (req, res, next) => {
 exports.checkAnswer = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { answer, nickname } = req.body;
-    if (answer == undefined || answer.length == 0) {
+    const { question, answer, account } = req.body;
+    if (answer === undefined || answer.length == 0 || question === undefined || account === undefined) {
       return next(new CustomErr("invalid value", 400));
     }
     const result = await userService
-      .findAnswer(answer, nickname)
+      .findAnswer(String(question), answer, account)
       .then((res) => res)
       .catch((err) => err);
     if (result.length == 0) {
       return next(new CustomErr("no result", 404));
     }
     const userToken = await userService
-      .getToken(nickname)
+      .getToken(account)
       .then((res) => res)
       .catch((err) => err);
     return response.send("user get token", 200, userToken);
@@ -137,13 +148,13 @@ exports.checkAnswer = async (req, res, next) => {
 exports.newPassword = async (req, res, next) => {
   const response = new Response(res);
   try {
-    const { userToken, password, account, nickname } = req.body;
+    const { userToken, password, account } = req.body;
     if (password == undefined || password.length == 0 || account == undefined || account.length == 0) {
       return next(new CustomErr("invalid value", 400));
     }
     // 토큰 검증
     const verifyToken = await userService
-      .checkToken(userToken, nickname)
+      .checkToken(userToken, account)
       .then((res) => res)
       .catch((err) => err);
     if (verifyToken) {
@@ -159,7 +170,7 @@ exports.newPassword = async (req, res, next) => {
         return next(new CustomErr("no validate account", 400));
       }
       const result = await userService
-        .findPassword(hashPw, account)
+        .updatePassword(hashPw, account)
         .then((res) => res)
         .catch((err) => err);
       if (result.length == 0) {

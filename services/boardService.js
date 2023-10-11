@@ -11,8 +11,28 @@ const query = (sql, values) => {
   });
 };
 
+exports.countComment = (boardId) => {
+  const sql =
+    "SELECT COUNT(*) FROM comment LEFT JOIN board ON board.board_id = comment.board_id WHERE board.board_id = ? AND comment.is_delete = 1;";
+  const values = boardId;
+  return new Promise(function (resolve, reject) {
+    connection.query(sql, values, (error, result) => {
+      if (error) {
+        reject(error);
+      }
+      const numbers = Object.values(JSON.parse(JSON.stringify(result)))[0]["COUNT(*)"];
+      resolve(numbers);
+    });
+  });
+};
+exports.updateComment = (countComment, boardId) => {
+  const sql = "UPDATE board SET comment_count = ?  WHERE board_id = ?;";
+  const values = [countComment, boardId];
+  return query(sql, values);
+};
+
 exports.boardCountAll = () => {
-  const sql = "SELECT count(*) as count FROM board;";
+  const sql = "SELECT COUNT(*) as count FROM board;";
   return new Promise(function (resolve, reject) {
     connection.query(sql, (error, result) => {
       if (error) {
@@ -30,7 +50,7 @@ exports.countSearchTitle = (value) => {
 };
 
 exports.searchTitle = (pageSize, pageNum, value) => {
-  const sql = `SELECT * from board WHERE title LIKE ? LIMIT ?, ?;`;
+  const sql = `SELECT * from board WHERE title LIKE ? ORDER BY createdAt desc LIMIT ?, ?;`;
   const values = [`%${value}%`, (pageNum - 1) * pageSize, pageSize];
   return query(sql, values);
 };
@@ -42,7 +62,7 @@ exports.countSearchContent = (value) => {
 };
 
 exports.searchContent = (pageSize, pageNum, value) => {
-  const sql = `SELECT * from board WHERE content LIKE ? LIMIT ?, ?;`;
+  const sql = `SELECT * from board WHERE content LIKE ? ORDER BY createdAt desc LIMIT ?, ?;`;
   const values = [`%${value}%`, (pageNum - 1) * pageSize, pageSize];
   return query(sql, values);
 };
@@ -54,14 +74,14 @@ exports.countSearchAll = (value) => {
 };
 
 exports.searchAll = (pageSize, pageNum, value) => {
-  const sql = `SELECT * from board WHERE title LIKE ? OR content LIKE ? LIMIT ?, ?;`;
+  const sql = `SELECT * from board WHERE title LIKE ? OR content LIKE ? ORDER BY createdAt desc LIMIT ?, ?;`;
   const values = [`%${value}%`, `%${value}%`, (pageNum - 1) * pageSize, pageSize];
   return query(sql, values);
 };
 
 exports.getList = (pageSize, pageNum) => {
-  const sql = `SELECT * from board LIMIT ?, ?;`;
-  const values = [(pageNum - 1) * pageSize, pageSize];
+  const sql = `SELECT * from board WHERE is_delete = ? ORDER BY createdAt desc LIMIT ?, ?;`;
+  const values = [1, (pageNum - 1) * pageSize, pageSize];
   return query(sql, values);
 };
 
@@ -93,5 +113,11 @@ exports.checkBoardId = (boardId) => {
 exports.updateDelete = (boardId) => {
   const sql = `UPDATE board SET is_delete = 0 WHERE board_id =?;`;
   const values = boardId;
+  return query(sql, values);
+};
+
+exports.addhitsNum = (number, boardId) => {
+  const sql = "UPDATE board SET hits = ? + 1 WHERE board_id = ?;";
+  const values = [number, boardId];
   return query(sql, values);
 };
