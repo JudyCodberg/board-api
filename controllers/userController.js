@@ -77,6 +77,7 @@ exports.join = async (req, res, next) => {
       .join(id, nickname, hashPw, question, answer)
       .then((res) => res)
       .catch((err) => err);
+
     if (checkResult !== undefined) {
       return response.send("Join Success", 200, null);
     }
@@ -111,6 +112,7 @@ exports.login = async (req, res, next) => {
         .then((res) => res)
         .catch((err) => err);
       const username = result[0].nickname;
+      console.log("loginToken", loginToken);
       return response.send("Login Success", 200, { username, loginToken });
     }
     return next(new CustomErr("password not matched", 400));

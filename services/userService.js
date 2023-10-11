@@ -61,6 +61,7 @@ exports.loginToken = (id) => {
       if (err) {
         reject(err);
       }
+      console.log(token);
       resolve({ token, id });
     });
   });
