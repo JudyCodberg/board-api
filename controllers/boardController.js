@@ -105,7 +105,6 @@ exports.detail = async (req, res, next) => {
     if (result.length === 0) {
       return next(new CustomErr("board_id is not founded", 404));
     }
-    console.log("result", result);
     const number = result[0].hits;
     const hits = await boardService
       .addhitsNum(number, boardId)
@@ -113,7 +112,6 @@ exports.detail = async (req, res, next) => {
       .catch((err) => err);
     return response.send("Success", 200, result);
   } catch (err) {
-    console.log(err);
     next(err);
   }
 };

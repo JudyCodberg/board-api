@@ -45,7 +45,6 @@ exports.write = async (req, res, next) => {
     }
     return next(new CustomErr("invalid value", 400));
   } catch (err) {
-    console.log("cmt write err", err);
     next(err);
   }
 };
@@ -74,8 +73,6 @@ exports.edit = async (req, res, next) => {
     }
     return response(res, "invalid value", 400, null);
   } catch (err) {
-    console.log("cmt edit err", err);
-
     next(err);
   }
 };
@@ -105,8 +102,6 @@ exports.delete = async (req, res, next) => {
     }
     return next(new CustomErr("no validate comment id", 404));
   } catch (err) {
-    console.log("cmt delete err", err);
-
     next(err);
   }
 };
