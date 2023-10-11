@@ -6,9 +6,10 @@ const { UserRouter, BoardRouter, CommentRouter } = require("./routes/index.js");
 const handleError = require("./handleErr.js");
 const { verifyToken } = require("./verifyToken.js");
 
-app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// app.use(cors({ origin: "http://judy-board.s3-website.ap-northeast-2.amazonaws.com/" }));
+app.use(cors());
 
 app.use(verifyToken);
 app.use("/user", UserRouter);
