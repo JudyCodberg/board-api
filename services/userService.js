@@ -92,7 +92,7 @@ exports.checkToken = (userToken, account) => {
 };
 
 exports.findAnswer = (question, answer, account) => {
-  const sql = `SELECT * FROM user WHERE pw_question = 0 AND pw_answer = ? AND account = ? ;`;
+  const sql = `SELECT * FROM user WHERE pw_question = ? AND pw_answer = ? AND account = ? ;`;
   const values = [question, answer, account];
   return query(sql, values);
 };
