@@ -6,11 +6,6 @@ const { UserRouter, BoardRouter, CommentRouter } = require("./routes/index.js");
 const handleError = require("./handleErr.js");
 const { verifyToken } = require("./verifyToken.js");
 
-/* hide console */
-console.log = function no_console() {};
-console.warn = function no_console() {};
-console.warn = function () {};
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(cors({ origin: "http://judy-board.s3-website.ap-northeast-2.amazonaws.com/" }));

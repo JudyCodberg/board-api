@@ -7,7 +7,6 @@ exports.verifyToken = (req, res, next) => {
     return next();
   }
   const userToken = req.headers.authorization;
-  console.log(userToken);
   jwt.verify(userToken, process.env.SECRET_KEY, (err, decoded) => {
     if (decoded) {
       return next();
